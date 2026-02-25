@@ -1,0 +1,248 @@
+:root {
+    /* Video Synergie Colors */
+    --vs-blue: #009FE3;
+    --vs-magenta: #E6007E;
+    --vs-black: #010202;
+    --vs-white: #ffffff;
+
+    /* Excalidraw Overrides */
+    --color-primary: var(--vs-blue) !important;
+    --color-primary-darker: #0077aa !important;
+    /* Darker shade of VS Blue */
+    --color-secondary: var(--vs-magenta) !important;
+
+    --button-primary-bg: var(--vs-blue) !important;
+    --button-primary-hover: #0088c2 !important;
+}
+
+.whiteboard-container {
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    background-color: #f8f9fa;
+    padding-top: 35px;
+    /* Espace pour la barre de titre personnalisée */
+    box-sizing: border-box;
+}
+
+.eduboard-branding-minimal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 35px;
+    width: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 0 12px;
+    pointer-events: auto;
+    /* Permet au logo d'être visible, la zone de drag est gérée par -webkit-app-region */
+    -webkit-app-region: drag;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    gap: 8px;
+}
+
+.branding-sticker {
+    height: 24px;
+    width: 24px;
+    object-fit: contain;
+    margin-right: 4px;
+    -webkit-app-region: no-drag;
+    /* Évite les problèmes d'interaction sur l'icône si besoin */
+}
+
+.vs-logo-text {
+    color: var(--vs-blue);
+    font-weight: 800;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.eduboard-logo-text-minimal {
+    color: var(--vs-magenta);
+    font-weight: 700;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: -0.5px;
+}
+
+.install-button {
+    margin-left: 1rem;
+    background: #E6007E;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(230, 0, 126, 0.3);
+    pointer-events: auto;
+}
+
+.install-button:hover {
+    background: #c5006d;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(230, 0, 126, 0.4);
+}
+
+.install-button:active {
+    transform: translateY(0);
+}
+
+.install-icon {
+    font-size: 1rem;
+}
+
+/* Dark mode support */
+.mode-dark .eduboard-branding {
+    background: #2d2d2d;
+}
+
+.branding-logo-wrapper {
+    height: 44px;
+    width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.eduboard-welcome-logo {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* Hide Excalidraw specific links */
+.excalidraw .layer-ui__wrapper .footer-center,
+.excalidraw .layer-ui__wrapper .encrypted-icon,
+.excalidraw .layer-ui__wrapper .GitHub-icon,
+.excalidraw .layer-ui__wrapper .Discord-icon {
+    display: none !important;
+}
+
+/* Move only THE toolbar to the bottom and make it floating */
+.excalidraw .App-toolbar {
+    position: fixed !important;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100 !important;
+    width: auto !important;
+    max-width: 95vw !important;
+    background: white !important;
+    padding: 8px 12px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 64px !important;
+}
+
+/* Tool icons stability */
+.excalidraw .App-toolbar .ToolIcon,
+.excalidraw .App-toolbar button:not(.toolbar-drag-handle),
+.excalidraw .App-toolbar .ToolIcon_type_button,
+.excalidraw .App-toolbar .ToolIcon_type_radio,
+.excalidraw .App-toolbar label {
+    width: 48px !important;
+    height: 48px !important;
+    margin: 0 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+}
+
+.excalidraw .App-toolbar svg {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* Hide shortcuts to save space */
+.excalidraw .App-toolbar .ToolIcon__keybinding {
+    display: none !important;
+}
+
+/* Toolbar Drag Handle */
+.toolbar-drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 100%;
+    cursor: grab;
+    padding: 0 4px;
+    margin-right: 4px;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    -webkit-app-region: no-drag;
+}
+
+/* POSITIONNEMENT DU MENU "PLUS D'OUTILS" SEULEMENT */
+/* On cible spécifiquement le ShapesSwitcher qui est le menu de la barre */
+body.toolbar-at-bottom .ShapesSwitcher,
+body.toolbar-at-bottom [class*="ShapesSwitcher"] {
+    position: fixed !important;
+    bottom: 95px !important;
+    top: auto !important;
+    left: var(--toolbar-left, 50%) !important;
+    transform: translateX(-50%) !important;
+    z-index: 999999 !important;
+    background: white !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+}
+
+body.toolbar-at-top .ShapesSwitcher,
+body.toolbar-at-top [class*="ShapesSwitcher"] {
+    position: fixed !important;
+    top: 95px !important;
+    bottom: auto !important;
+    left: var(--toolbar-left, 50%) !important;
+    transform: translateX(-50%) !important;
+    z-index: 999999 !important;
+    background: white !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+}
+
+/* Scaling up Undo/Redo and Zoom for Touch */
+.excalidraw .undo-redo-buttons {
+    transform: scale(1.2) !important;
+    margin-bottom: 20px !important;
+    margin-left: 40px !important;
+    transform-origin: bottom left !important;
+}
+
+.excalidraw .zoom-actions {
+    transform: scale(1.2) !important;
+    margin-bottom: 20px !important;
+    margin-left: 80px !important;
+    transform-origin: bottom left !important;
+}
+
+/* Hide Excalidraw specific links, hints and help annotations */
+.excalidraw .layer-ui__wrapper .footer-center,
+.excalidraw .layer-ui__wrapper .encrypted-icon,
+.excalidraw .layer-ui__wrapper .GitHub-icon,
+.excalidraw .layer-ui__wrapper .Discord-icon,
+.excalidraw .Hint,
+.excalidraw .inline-hint,
+.excalidraw [class*="Hint"],
+.excalidraw [class*="hint"] {
+    display: none !important;
+}
+
+/* Keep only essential controls in the bottom area */
+.excalidraw .App-bottom-content div:not(.undo-redo-container):not(.zoom-controls):not(.App-toolbar) {
+    display: none !important;
+}

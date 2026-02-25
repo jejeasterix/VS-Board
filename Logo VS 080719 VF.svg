@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 23.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Calque_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 538 363.06" style="enable-background:new 0 0 538 363.06;" xml:space="preserve">
+<style type="text/css">
+	.st0{display:none;}
+	.st1{display:inline;fill:none;}
+	.st2{display:inline;fill:#010202;}
+	.st3{font-family:'TwCenMT-Regular';}
+	.st4{font-size:61px;}
+	.st5{font-family:'TwCenMT-Bold';}
+	.st6{font-size:29px;}
+	.st7{letter-spacing:4;}
+	.st8{letter-spacing:1;}
+	.st9{display:inline;fill:#009FE3;}
+	.st10{display:inline;fill:#E6007E;}
+	.st11{fill:#009FE3;}
+	.st12{fill:#E6007E;}
+	.st13{fill:none;}
+	.st14{font-size:37.5px;}
+	.st15{font-size:96px;}
+	.st16{letter-spacing:-4;}
+	.st17{display:inline;fill:#FFFFFF;}
+</style>
+<g id="Historique" class="st0">
+	<rect x="57.38" y="223.78" class="st1" width="440.71" height="106.5"/>
+	<text id="ORIGINAL_Vidéo_Synergie_Installation_-_Intégration_-_Location" transform="matrix(1 0 0 1 86.8509 263.5548)"><tspan x="0" y="0" class="st2 st3 st4">Vidéo</tspan><tspan x="149.45" y="0" class="st2 st5 st4"> </tspan><tspan x="166.6" y="0" class="st2 st5 st4">Synergie</tspan><tspan x="-7.07" y="29.5" class="st2 st3 st6">Installation - Intégration - Location</tspan></text>
+	<rect x="50.88" y="264.78" class="st1" width="440.46" height="106.5"/>
+	<text id="Vidéo_Synergie_Installation_-_Intégration_-_Location" transform="matrix(1 0 0 1 51.0994 304.5548)"><tspan x="0" y="0" class="st2 st3 st4 st7">Vidéo</tspan><tspan x="167.75" y="0" class="st2 st5 st4 st7"> Synergie</tspan><tspan x="-0.22" y="48" class="st2 st3 st6 st8">Installation - </tspan><tspan x="168.59" y="48" class="st9 st3 st6 st8">Intégration</tspan><tspan x="308.08" y="48" class="st2 st3 st6 st8"> - </tspan><tspan x="337.83" y="48" class="st10 st3 st6 st8">Location</tspan></text>
+</g>
+<g id="REPERES">
+</g>
+<g id="Groupe_S">
+	<path id="S" d="M359.98,0.1c-5.08,2.15-22.48,10.23-32.95,30.19c-2.4,4.58-10.25,19.99-6.93,39.48c0.09,0.54,1.99,11.18,8.07,21.11
+		c23.91,39.07,80.97,31.59,115.44,77.04c7.68,10.13,7.35,25.04,2.15,48.17c4.37-1.78,14.45-8.26,21.72-17.2
+		c9.2-11.31,10.81-23.39,11.18-28.04c1.3-7.72,1.99-21.05-4.57-34.16c-11.04-22.07-31.07-31.17-48.88-39
+		c-28.74-12.64-42.69-21.8-49.69-27.27c-16.67-13.04-21.22-27.97-20.25-43.86C355.21,21.74,358.06,5.58,359.98,0.1z"/>
+	<polygon class="st11" points="432.81,48.17 432.81,0 479.53,24.08 	"/>
+</g>
+<g id="Groupe_V">
+	<polygon points="120.33,0.17 60.83,0.17 172.83,216.51 201.84,160.47 	"/>
+	<circle class="st12" cx="246.21" cy="24.17" r="24"/>
+</g>
+<rect x="50" y="330.76" class="st13" width="441.4" height="40.26"/>
+<text id="BASELINE" transform="matrix(1 0 0 1 58.1681 354.5344)" class="st3 st14">Vente - Location - Intégration</text>
+<rect x="-50.42" y="236.38" class="st13" width="641.25" height="87.7"/>
+<text id="NOM_ENTREPRISE" transform="matrix(1 0 0 1 1.5021 298.9737)"><tspan x="0" y="0" class="st3 st15 st16">Vidéo </tspan><tspan x="225.69" y="0" class="st5 st15 st16">Synergie</tspan></text>
+<g id="tests" class="st0">
+	<rect x="57.04" y="233.95" class="st17" width="25.33" height="23.58"/>
+	<polygon class="st9" points="60,249.73 60,239.08 70.33,244.4 	"/>
+	<circle class="st10" cx="486.03" cy="243.72" r="7.5"/>
+</g>
+</svg>
