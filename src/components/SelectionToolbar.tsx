@@ -69,15 +69,17 @@ function getShapeBounds(s: Shape): { minX: number; minY: number; maxX: number; m
       maxY: s.y + pMaxY * sy,
     };
   }
-  return { minX: s.x, minY: s.y, maxX: s.x, maxY: s.y };
+  // Exhaustive: all Shape types handled above
+  const _exhaustive: never = s;
+  return { minX: (_exhaustive as Shape).x, minY: (_exhaustive as Shape).y, maxX: (_exhaustive as Shape).x, maxY: (_exhaustive as Shape).y };
 }
 
 const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
   selectedShapes, stagePos, stageScale, topBarHeight,
   onUpdate, onDelete, onDuplicate,
 }) => {
-  const { position, categories, showStroke, showWidth, showFill, showFontSize, isMixed } = useMemo(() => {
-    if (selectedShapes.length === 0) return { position: null, categories: new Set<ShapeCategory>(), showStroke: false, showWidth: false, showFill: false, showFontSize: false, isMixed: false };
+  const { position, showStroke, showWidth, showFill, showFontSize, isMixed } = useMemo(() => {
+    if (selectedShapes.length === 0) return { position: null, showStroke: false, showWidth: false, showFill: false, showFontSize: false, isMixed: false };
 
     // Bounding box
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -99,7 +101,6 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
 
     return {
       position: { x: screenX, y: screenY },
-      categories: cats,
       showStroke: !mixed && !cats.has('image'),
       showWidth: !mixed && (cats.has('freedraw') || cats.has('closedShape') || cats.has('lineShape')),
       showFill: !mixed && cats.has('closedShape'),
