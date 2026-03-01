@@ -26,105 +26,82 @@ export const PenTool: React.FC<ToolProps> = ({ color = '#000', active }) => (
   </svg>
 );
 
-// Fine liner / technical pen
-export const FinepenTool: React.FC<ToolProps> = ({ color = '#000', active }) => (
-  <svg width="20" height="72" viewBox="0 0 20 72" fill="none" style={{ filter: active ? 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))' : undefined }}>
+// Highlighter - wide semi-transparent chisel tip marker
+export const HighlighterTool: React.FC<ToolProps> = ({ color = '#facc15', active }) => (
+  <svg width="24" height="72" viewBox="0 0 24 72" fill="none" style={{ filter: active ? 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))' : undefined }}>
+    {/* Cap */}
+    <rect x="5" y="2" width="14" height="10" rx="3" fill="#facc15" />
+    <rect x="5" y="9" width="14" height="3" rx="0" fill="#e5b800" />
     {/* Body */}
-    <rect x="7" y="2" width="6" height="44" rx="3" fill="#2c2c2e" />
-    {/* Grip rings */}
-    {[32, 34, 36, 38].map(y => (
-      <rect key={y} x="7" y={y} width="6" height="1" rx="0.3" fill="#636366" />
-    ))}
-    {/* Tip cone */}
-    <polygon points="8,46 12,46 10.5,62 9.5,62" fill="#aeaeb2" />
-    {/* Fine tip */}
-    <line x1="10" y1="62" x2="10" y2="68" stroke="#3a3a3c" strokeWidth="1" strokeLinecap="round" />
-    {/* Stroke preview */}
-    <line x1="4" y1="71" x2="16" y2="71" stroke={color} strokeWidth="1" strokeLinecap="round" />
-  </svg>
-);
-
-// Pencil - classic yellow #2 pencil
-export const PencilTool: React.FC<ToolProps> = ({ color = '#000', active }) => (
-  <svg width="20" height="72" viewBox="0 0 20 72" fill="none" style={{ filter: active ? 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))' : undefined }}>
-    {/* Eraser */}
-    <rect x="7" y="2" width="6" height="7" rx="1" fill="#e88b9c" />
-    {/* Ferrule (metal band) */}
-    <rect x="6.5" y="8" width="7" height="4" rx="0.5" fill="#c4a34a" />
-    <line x1="7" y1="10" x2="13" y2="10" stroke="#a08630" strokeWidth="0.5" />
-    {/* Body */}
-    <rect x="7" y="12" width="6" height="40" rx="0" fill="#f5c542" />
+    <rect x="6" y="12" width="12" height="34" rx="2" fill="#facc15" />
     {/* Body shading */}
-    <rect x="7" y="12" width="2" height="40" fill="#e6b230" />
-    <rect x="11" y="12" width="2" height="40" fill="#f7d060" />
-    {/* Text on pencil */}
-    <rect x="8" y="22" width="4" height="6" rx="0.5" fill="#d4a020" opacity="0.5" />
-    {/* Tip cone */}
-    <polygon points="7,52 13,52 10,66" fill="#deb887" />
-    {/* Graphite */}
-    <polygon points="9,62 11,62 10,68" fill="#3a3a3c" />
-    {/* Stroke preview */}
-    <line x1="4" y1="71" x2="16" y2="71" stroke={color} strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
-
-// Marker - thick body with chisel/bullet tip
-export const MarkerTool: React.FC<ToolProps> = ({ color = '#e74c3c', active }) => (
-  <svg width="22" height="72" viewBox="0 0 22 72" fill="none" style={{ filter: active ? 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))' : undefined }}>
-    {/* Cap top */}
-    <rect x="5" y="2" width="12" height="4" rx="2" fill={color} opacity="0.8" />
-    {/* Body */}
-    <rect x="5" y="5" width="12" height="38" rx="2" fill="#f5f5f7" />
-    {/* Label */}
-    <rect x="6" y="14" width="10" height="14" rx="1" fill={color} opacity="0.15" />
-    <rect x="7" y="17" width="8" height="2" rx="0.5" fill={color} opacity="0.3" />
-    <rect x="7" y="21" width="5" height="2" rx="0.5" fill={color} opacity="0.3" />
-    {/* Grip */}
-    <rect x="6" y="40" width="10" height="8" rx="1" fill="#e5e5ea" />
+    <rect x="6" y="12" width="4" height="34" rx="1" fill="#e5b800" opacity="0.4" />
+    {/* Grip ridges */}
+    {[36, 38, 40, 42].map(y => (
+      <rect key={y} x="6" y={y} width="12" height="0.8" rx="0.3" fill="#d4a600" opacity="0.4" />
+    ))}
     {/* Tip section */}
-    <polygon points="7,48 15,48 12,64 10,64" fill="#d1d1d6" />
-    {/* Tip */}
-    <rect x="9.5" y="62" width="3" height="6" rx="1.5" fill={color} />
-    {/* Stroke preview */}
-    <line x1="3" y1="71" x2="19" y2="71" stroke={color} strokeWidth="4" strokeLinecap="round" />
+    <polygon points="7,46 17,46 15,62 9,62" fill="#e5e5ea" />
+    {/* Chisel tip */}
+    <rect x="8" y="60" width="8" height="8" rx="1" fill="#facc15" opacity="0.7" />
+    {/* Stroke preview - wide semi-transparent */}
+    <line x1="2" y1="71" x2="22" y2="71" stroke={color} strokeWidth="6" strokeLinecap="round" opacity="0.45" />
   </svg>
 );
 
-// Crayon - textured crayon shape
-export const CrayonTool: React.FC<ToolProps> = ({ color = '#8b5cf6', active }) => (
-  <svg width="22" height="72" viewBox="0 0 22 72" fill="none" style={{ filter: active ? 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))' : undefined }}>
-    {/* Body */}
-    <rect x="5" y="2" width="12" height="48" rx="3" fill={color} />
-    {/* Paper wrapper */}
-    <rect x="5" y="12" width="12" height="24" rx="0" fill="#f5f5f7" />
-    <rect x="5" y="12" width="12" height="1" fill={color} opacity="0.3" />
-    <rect x="5" y="35" width="12" height="1" fill={color} opacity="0.3" />
-    {/* Wrapper lines */}
-    <text x="7" y="22" fontSize="4" fill={color} opacity="0.4" fontFamily="sans-serif" fontWeight="bold">ART</text>
-    <rect x="7" y="26" width="8" height="1.5" rx="0.5" fill={color} opacity="0.2" />
-    <rect x="7" y="29" width="5" height="1.5" rx="0.5" fill={color} opacity="0.2" />
-    {/* Tip */}
-    <polygon points="6,50 16,50 13,66 9,66" fill={color} />
-    <polygon points="9,64 13,64 11,68" fill={color} opacity="0.8" />
+// Paint bucket - small can with paint drip
+export const PaintBucketTool: React.FC<ToolProps> = ({ color = '#3b82f6', active }) => (
+  <svg width="26" height="72" viewBox="0 0 26 72" fill="none" style={{ filter: active ? 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))' : undefined }}>
+    {/* Handle / bail */}
+    <path d="M8 10 Q13 2 18 10" stroke="#9ca3af" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+    {/* Bucket body */}
+    <path d="M5 14 L7 52 L19 52 L21 14 Z" fill="#9ca3af" />
+    {/* Bucket front face */}
+    <path d="M5 14 L7 52 L13 52 L13 14 Z" fill="#b0b0b0" />
+    {/* Top rim */}
+    <ellipse cx="13" cy="14" rx="8" ry="3" fill="#c4c4c4" stroke="#9ca3af" strokeWidth="0.8" />
+    {/* Inner rim */}
+    <ellipse cx="13" cy="14" rx="6" ry="2" fill="#8e8e93" opacity="0.4" />
+    {/* Metal bands */}
+    <rect x="6" y="22" width="14" height="1.5" rx="0.5" fill="#d1d5db" opacity="0.7" />
+    <rect x="6" y="42" width="14" height="1.5" rx="0.5" fill="#d1d5db" opacity="0.7" />
+    {/* Paint inside bucket (visible at top) */}
+    <ellipse cx="13" cy="14" rx="5.5" ry="1.8" fill={color} opacity="0.8" />
+    {/* Paint drip on side */}
+    <path d="M19 16 Q21 16 21 22 Q21 28 20 32" stroke={color} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+    {/* Paint drop falling */}
+    <ellipse cx="20" cy="36" rx="2" ry="2.5" fill={color} />
+    {/* Bottom rim */}
+    <ellipse cx="13" cy="52" rx="6" ry="2" fill="#8e8e93" />
     {/* Stroke preview */}
-    <line x1="3" y1="71" x2="19" y2="71" stroke={color} strokeWidth="5" strokeLinecap="round" opacity="0.7" />
+    <line x1="3" y1="71" x2="23" y2="71" stroke={color} strokeWidth="4" strokeLinecap="round" />
   </svg>
 );
 
-// Eraser
+// Eraser - recognizable pink/red eraser block
 export const EraserTool: React.FC<ToolProps> = ({ active }) => (
-  <svg width="22" height="72" viewBox="0 0 22 72" fill="none" style={{ filter: active ? 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))' : undefined }}>
-    {/* Handle */}
-    <rect x="7" y="2" width="8" height="36" rx="2" fill="#d1d1d6" />
-    <rect x="7" y="2" width="3" height="36" rx="1" fill="#c7c7cc" />
-    {/* Band */}
-    <rect x="6" y="36" width="10" height="3" rx="1" fill="#aeaeb2" />
-    {/* Eraser body */}
-    <rect x="5" y="39" width="12" height="26" rx="2" fill="#f5f5f7" />
-    <rect x="5" y="39" width="12" height="26" rx="2" stroke="#d1d1d6" strokeWidth="0.5" />
-    {/* Eraser wear */}
-    <rect x="6" y="58" width="10" height="6" rx="1" fill="#e5e5ea" />
-    {/* Stroke preview (light gray = erase) */}
-    <line x1="3" y1="71" x2="19" y2="71" stroke="#e5e5ea" strokeWidth="4" strokeLinecap="round" />
+  <svg width="26" height="72" viewBox="0 0 26 72" fill="none" style={{ filter: active ? 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))' : undefined }}>
+    {/* Eraser body - pink rubber */}
+    <rect x="4" y="14" width="18" height="44" rx="4" fill="#f472b6" />
+    {/* Darker side for 3D effect */}
+    <rect x="4" y="14" width="5" height="44" rx="2" fill="#ec4899" opacity="0.6" />
+    {/* Top bevel */}
+    <rect x="4" y="14" width="18" height="4" rx="2" fill="#f9a8d4" opacity="0.5" />
+    {/* Paper sleeve */}
+    <rect x="4" y="22" width="18" height="20" rx="1" fill="#1e3a5f" />
+    <rect x="4" y="22" width="18" height="2" fill="#16304f" opacity="0.5" />
+    <rect x="4" y="40" width="18" height="2" fill="#16304f" opacity="0.5" />
+    {/* Sleeve label */}
+    <rect x="7" y="28" width="12" height="2" rx="0.5" fill="#f5f5f7" opacity="0.5" />
+    <rect x="8" y="32" width="10" height="2" rx="0.5" fill="#f5f5f7" opacity="0.3" />
+    <rect x="9" y="36" width="8" height="1.5" rx="0.5" fill="#f5f5f7" opacity="0.2" />
+    {/* Wear marks at bottom */}
+    <rect x="5" y="52" width="16" height="5" rx="1" fill="#e8458b" opacity="0.4" />
+    {/* Eraser crumbs effect */}
+    <circle cx="8" cy="62" r="1" fill="#f9a8d4" opacity="0.4" />
+    <circle cx="14" cy="63" r="0.8" fill="#f9a8d4" opacity="0.3" />
+    <circle cx="18" cy="61" r="1.2" fill="#f9a8d4" opacity="0.35" />
+    {/* Stroke preview */}
+    <line x1="3" y1="71" x2="23" y2="71" stroke="#f9a8d4" strokeWidth="4" strokeLinecap="round" />
   </svg>
 );

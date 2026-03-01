@@ -9,11 +9,25 @@ export type ToolType =
   | 'freedraw'
   | 'text'
   | 'eraser'
-  | 'image';
+  | 'image'
+  | 'roundedRect'
+  | 'triangle'
+  | 'star'
+  | 'speechBubble'
+  | 'curve'
+  | 'shape3d'
+  | 'icon'
+  | 'paintBucket';
 
 export type BackgroundType = 'blank' | 'grid' | 'lined' | 'dotted';
 
 export type InteractionMode = 'desktop' | 'eni' | 'tablet';
+
+export type EraserMode = 'click' | 'stroke';
+
+export type PaintMode = 'stroke' | 'fill';
+
+export type EndpointStyle = 'none' | 'arrow' | 'circle' | 'square';
 
 export interface BaseShape {
   id: string;
@@ -26,6 +40,7 @@ export interface BaseShape {
   rotation: number;
   scaleX: number;
   scaleY: number;
+  opacity?: number;
 }
 
 export interface RectangleShape extends BaseShape {
@@ -49,11 +64,17 @@ export interface DiamondShape extends BaseShape {
 export interface LineShape extends BaseShape {
   type: 'line';
   points: number[];
+  startStyle?: EndpointStyle;
+  endStyle?: EndpointStyle;
 }
 
 export interface ArrowShape extends BaseShape {
   type: 'arrow';
   points: number[];
+  controlX?: number;
+  controlY?: number;
+  startStyle?: EndpointStyle;
+  endStyle?: EndpointStyle;
 }
 
 export interface FreedrawShape extends BaseShape {
@@ -75,6 +96,45 @@ export interface ImageShape extends BaseShape {
   height: number;
 }
 
+export interface RoundedRectShape extends BaseShape {
+  type: 'roundedRect';
+  width: number;
+  height: number;
+  cornerRadius: number;
+}
+
+export interface TriangleShape extends BaseShape {
+  type: 'triangle';
+  width: number;
+  height: number;
+  variant: 'right' | 'isoceles' | 'free';
+  points?: number[];
+  indicatorSize?: number;
+}
+
+export interface StarShape extends BaseShape {
+  type: 'star';
+  numPoints: number;
+  innerRadius: number;
+  outerRadius: number;
+}
+
+export interface SpeechBubbleShape extends BaseShape {
+  type: 'speechBubble';
+  width: number;
+  height: number;
+  variant: 'round' | 'rect';
+  tailX: number;
+  tailY: number;
+}
+
+export interface CurveShape extends BaseShape {
+  type: 'curve';
+  points: number[]; // [0,0, dx,dy] start/end relative
+  controlX: number;
+  controlY: number;
+}
+
 export type Shape =
   | RectangleShape
   | EllipseShape
@@ -83,7 +143,12 @@ export type Shape =
   | ArrowShape
   | FreedrawShape
   | TextShape
-  | ImageShape;
+  | ImageShape
+  | RoundedRectShape
+  | TriangleShape
+  | StarShape
+  | SpeechBubbleShape
+  | CurveShape;
 
 export interface BoardMeta {
   id: string;
@@ -100,6 +165,8 @@ export interface CanvasHandle {
   undo: () => void;
   redo: () => void;
   clear: () => void;
+  clearAnnotations: () => void;
+  clearShapes: () => void;
   exportImage: () => void;
   addImage: () => void;
   canUndo: boolean;
