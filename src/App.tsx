@@ -10,7 +10,7 @@ function App() {
   const [strokeColor, setStrokeColor] = useState('#000000');
   const [fillColor, setFillColor] = useState('transparent');
   const [strokeWidth, setStrokeWidth] = useState(4);
-  const [fontSize] = useState(24);
+  const [fontSize, setFontSize] = useState(24);
   const [background, setBackground] = useState<BackgroundType>('blank');
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [interactionMode, setInteractionMode] = useState<InteractionMode>(
@@ -38,6 +38,10 @@ function App() {
   const handleModeChange = (mode: InteractionMode) => {
     setInteractionMode(mode);
     localStorage.setItem('interactionMode', mode);
+    // In tablet mode, select/hand are hidden — switch away if active
+    if (mode === 'tablet' && (tool === 'select' || tool === 'hand')) {
+      setTool('freedraw');
+    }
   };
 
   const handleToolChange = (newTool: ToolType) => {
@@ -66,6 +70,7 @@ function App() {
         fontSize={fontSize}
         background={background}
         onToolChange={setTool}
+        interactionMode={interactionMode}
       />
       <Toolbar
         tool={tool}
@@ -76,8 +81,11 @@ function App() {
         onFillColorChange={setFillColor}
         strokeWidth={strokeWidth}
         onStrokeWidthChange={setStrokeWidth}
+        fontSize={fontSize}
+        onFontSizeChange={setFontSize}
         background={background}
         onBackgroundChange={setBackground}
+        interactionMode={interactionMode}
       />
     </div>
   );

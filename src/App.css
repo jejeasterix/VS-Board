@@ -160,6 +160,8 @@
   min-width: 100px;
   min-height: 32px;
   resize: both;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* ============================================================
@@ -264,6 +266,14 @@
     0 2px 8px rgba(0, 0, 0, 0.06),
     0 12px 40px rgba(0, 0, 0, 0.08);
   z-index: 150;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fm-toolbar.fm-toolbar-hidden {
+  transform: translateX(-50%) translateY(calc(100% + 40px));
+  opacity: 0;
+  pointer-events: none;
 }
 
 .fm-toolbar-compact {
@@ -362,6 +372,37 @@
 /* White dot needs visible edge */
 .fm-color-dot[style*="ffffff"] {
   border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Font size buttons (text tool) */
+.fm-font-sizes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fm-fontsize-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3c3c43;
+  transition: all 0.15s;
+  padding: 0 4px;
+}
+
+.fm-fontsize-btn:hover { background: rgba(0, 0, 0, 0.06); }
+
+.fm-fontsize-btn.selected {
+  background: #007aff;
+  color: #fff;
 }
 
 /* Fill toggle button */
@@ -687,6 +728,125 @@
   flex-shrink: 0;
 }
 
+/* ============================================================
+   SELECTION TOOLBAR (floating above selected shapes)
+   ============================================================ */
+
+.selection-toolbar {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  z-index: 110;
+  pointer-events: auto;
+  animation: sel-fadein 0.15s ease-out;
+}
+
+@keyframes sel-fadein {
+  from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.sel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #3c3c43;
+  transition: background 0.12s;
+  padding: 0;
+}
+
+.sel-btn:hover { background: rgba(0, 0, 0, 0.06); }
+.sel-btn.active { background: #007aff; color: #fff; }
+.sel-btn.sel-delete:hover { background: rgba(255, 59, 48, 0.12); color: #ff3b30; }
+
+.sel-colors {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sel-color-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s;
+}
+
+.sel-color-dot:hover { transform: scale(1.2); }
+.sel-color-dot.active { border-color: rgba(255, 255, 255, 0.9); box-shadow: 0 0 0 2px #007aff; }
+
+.sel-widths {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sel-width-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.12s;
+}
+
+.sel-width-btn:hover { background: rgba(0, 0, 0, 0.06); }
+.sel-width-btn.active { background: #007aff; }
+
+.sel-width-line {
+  display: block;
+  width: 16px;
+  background: #1d1d1f;
+  border-radius: 3px;
+  min-height: 1px;
+}
+
+.sel-width-btn.active .sel-width-line { background: #fff; }
+
+.sel-fill-btn.filled { background: rgba(0, 122, 255, 0.1); }
+
+.sel-font-sizes {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sel-fontsize-btn {
+  font-size: 11px !important;
+  font-weight: 600;
+  min-width: 28px;
+}
+
+.sel-sep {
+  width: 1px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 600px) {
   .topbar-brand { display: none; }
@@ -704,6 +864,10 @@
     bottom: 10px;
     padding: 8px 10px;
     border-radius: 16px;
+  }
+
+  .fm-toolbar.fm-toolbar-hidden {
+    transform: translateX(-50%) translateY(calc(100% + 30px));
   }
 
   .fm-tool { width: 28px; }
