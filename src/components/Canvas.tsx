@@ -14,6 +14,8 @@ interface CanvasProps {
   background: BackgroundType;
   onToolChange: (tool: ToolType) => void;
   interactionMode: InteractionMode;
+  initialShapes?: Shape[];
+  onShapesChange?: (shapes: Shape[]) => void;
 }
 
 // ---- History reducer (eliminates stale closures) ----
@@ -27,7 +29,8 @@ type HistoryAction =
   | { type: 'PUSH'; shapes: Shape[] }
   | { type: 'UNDO' }
   | { type: 'REDO' }
-  | { type: 'CLEAR' };
+  | { type: 'CLEAR' }
+  | { type: 'INIT'; shapes: Shape[] };
 
 function historyReducer(state: HistoryState, action: HistoryAction): HistoryState {
   switch (action.type) {
@@ -57,6 +60,12 @@ function historyReducer(state: HistoryState, action: HistoryAction): HistoryStat
         past: [...state.past, state.shapes],
         future: [],
       };
+    case 'INIT':
+      return {
+        shapes: action.shapes,
+        past: [],
+        future: [],
+      };
   }
 }
 
@@ -65,16 +74,35 @@ const getDiamondPoints = (w: number, h: number) => [w / 2, 0, w, h / 2, w / 2, h
 const DRAW_TOOLS: ToolType[] = ['freedraw', 'rectangle', 'ellipse', 'diamond', 'line', 'arrow'];
 
 const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
-  tool, strokeColor, fillColor, strokeWidth, fontSize, background, onToolChange, interactionMode
+  tool, strokeColor, fillColor, strokeWidth, fontSize, background, onToolChange, interactionMode,
+  initialShapes, onShapesChange
 }, ref) => {
   const isTactile = interactionMode === 'eni' || interactionMode === 'tablet';
   const isActiveDraw = DRAW_TOOLS.includes(tool);
-  const [state, dispatch] = useReducer(historyReducer, { shapes: [], past: [], future: [] });
+  const [state, dispatch] = useReducer(historyReducer, {
+    shapes: initialShapes ?? [],
+    past: [],
+    future: [],
+  });
   const { shapes } = state;
 
   // Use a ref to always have current shapes available in callbacks
   const shapesRef = useRef(shapes);
   shapesRef.current = shapes;
+
+  // Re-init when initialShapes changes (board switch)
+  const initRef = useRef(initialShapes);
+  useEffect(() => {
+    if (initialShapes !== initRef.current) {
+      initRef.current = initialShapes;
+      dispatch({ type: 'INIT', shapes: initialShapes ?? [] });
+    }
+  }, [initialShapes]);
+
+  // Notify parent of shape changes
+  useEffect(() => {
+    onShapesChange?.(shapes);
+  }, [shapes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [drawingShape, setDrawingShape] = useState<Shape | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -188,6 +216,20 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     e.target.value = '';
   }, [dimensions, generateId, onToolChange]);
 
+  // ---- Snapshot for thumbnail ----
+  const getSnapshot = useCallback(() => {
+    const stage = stageRef.current;
+    const tr = transformerRef.current;
+    if (!stage) return '';
+    const prevNodes = tr?.nodes() ?? [];
+    tr?.nodes([]);
+    layerRef.current?.batchDraw();
+    const uri = stage.toDataURL({ pixelRatio: 0.3, mimeType: 'image/jpeg', quality: 0.6 });
+    tr?.nodes(prevNodes);
+    layerRef.current?.batchDraw();
+    return uri;
+  }, []);
+
   // ---- Expose API ----
   useImperativeHandle(ref, () => ({
     undo: () => { dispatch({ type: 'UNDO' }); setSelectedIds([]); },
@@ -199,7 +241,8 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     get canRedo() { return state.future.length > 0; },
     zoomIn, zoomOut, zoomReset,
     get zoomLevel() { return Math.round(stageScale * 100); },
-  }), [exportImage, addImage, state.past.length, state.future.length, zoomIn, zoomOut, zoomReset, stageScale]);
+    getSnapshot,
+  }), [exportImage, addImage, state.past.length, state.future.length, zoomIn, zoomOut, zoomReset, stageScale, getSnapshot]);
 
   // ---- Resize ----
   useEffect(() => {
@@ -820,9 +863,8 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     });
   }, [shapes]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // TopBar height offset (toolbar floats over the canvas)
-  const topBarHeight = 48;
-  const canvasHeight = dimensions.height - topBarHeight;
+  const topBarHeight = 0;
+  const canvasHeight = dimensions.height;
 
   const cursorStyle = tool === 'hand' ? 'grab' :
     (isTactile && tool === 'select') ? 'grab' :

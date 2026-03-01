@@ -3,9 +3,11 @@ import {
   MousePointer2, PenTool as PenIcon, Square, Diamond, Circle,
   Minus, ArrowUpRight, Type, ImagePlus, Hand,
   Grid3X3, LayoutList, Grip, MoreHorizontal,
+  Menu, Download, Trash2, Monitor, MonitorSmartphone, Tablet,
 } from 'lucide-react';
 import { PenTool, FinepenTool, PencilTool, MarkerTool, CrayonTool, EraserTool } from './ToolIllustrations';
-import type { ToolType, BackgroundType, InteractionMode } from '../types';
+import ModeModal from './ModeModal';
+import type { ToolType, BackgroundType, InteractionMode, CanvasHandle } from '../types';
 
 interface ToolbarProps {
   tool: ToolType;
@@ -21,6 +23,8 @@ interface ToolbarProps {
   background: BackgroundType;
   onBackgroundChange: (bg: BackgroundType) => void;
   interactionMode: InteractionMode;
+  onModeChange?: (mode: InteractionMode) => void;
+  canvasRef?: React.RefObject<CanvasHandle | null>;
 }
 
 // Colors directly visible (like Freeform)
@@ -41,6 +45,18 @@ type DrawMode = 'pen' | 'finepen' | 'pencil' | 'marker' | 'crayon';
 
 const TEXT_FONT_SIZES = [16, 24, 36, 48];
 
+const modeLabels: Record<InteractionMode, string> = {
+  desktop: 'Souris',
+  eni: 'Tactile (ENI)',
+  tablet: 'Tactile (Tablette)',
+};
+
+const modeIcons: Record<InteractionMode, React.ReactNode> = {
+  desktop: <Monitor size={16} />,
+  eni: <MonitorSmartphone size={16} />,
+  tablet: <Tablet size={16} />,
+};
+
 const Toolbar: React.FC<ToolbarProps> = ({
   tool, onToolChange,
   strokeColor, onStrokeColorChange,
@@ -48,12 +64,13 @@ const Toolbar: React.FC<ToolbarProps> = ({
   strokeWidth, onStrokeWidthChange,
   fontSize, onFontSizeChange,
   background, onBackgroundChange,
-  interactionMode,
+  interactionMode, onModeChange, canvasRef,
 }) => {
   const isTactileInterface = interactionMode === 'tablet';
   const isTactile = interactionMode === 'eni' || interactionMode === 'tablet';
   const [openPopup, setOpenPopup] = useState<string | null>(null);
   const [drawMode, setDrawMode] = useState<DrawMode>('pen');
+  const [showModeModal, setShowModeModal] = useState(false);
 
   const closeAll = () => setOpenPopup(null);
   const toggle = (panel: string) => setOpenPopup(prev => prev === panel ? null : panel);
@@ -155,7 +172,42 @@ const Toolbar: React.FC<ToolbarProps> = ({
         >
           <ImagePlus size={18} />
         </button>
+
+        {onModeChange && (
+          <>
+            <div className="fm-mini-sep" />
+            <button
+              className={`fm-mini-btn ${openPopup === 'menu' ? 'active' : ''}`}
+              onClick={() => toggle('menu')}
+              title="Menu"
+            >
+              <Menu size={18} />
+            </button>
+          </>
+        )}
       </div>
+
+      {/* Hamburger menu dropdown */}
+      {openPopup === 'menu' && (
+        <div className="fm-menu-popup">
+          <button className="menu-item" onClick={() => { setShowModeModal(true); closeAll(); }}>
+            {modeIcons[interactionMode]}
+            <div className="menu-item-content">
+              <span>Mode</span>
+              <span className="menu-item-sub">{modeLabels[interactionMode]}</span>
+            </div>
+          </button>
+          <div className="menu-separator" />
+          <button className="menu-item" onClick={() => { canvasRef?.current?.exportImage(); closeAll(); }}>
+            <Download size={16} />
+            Exporter en PNG
+          </button>
+          <button className="menu-item" onClick={() => { canvasRef?.current?.clear(); closeAll(); }}>
+            <Trash2 size={16} />
+            Tout effacer
+          </button>
+        </div>
+      )}
 
       {/* Shapes popup (from minibar) */}
       {openPopup === 'shapes' && (
@@ -405,6 +457,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {showModeModal && onModeChange && (
+        <ModeModal
+          currentMode={interactionMode}
+          onModeChange={onModeChange}
+          onClose={() => setShowModeModal(false)}
+        />
       )}
     </>
   );

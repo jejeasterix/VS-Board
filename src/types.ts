@@ -85,6 +85,17 @@ export type Shape =
   | TextShape
   | ImageShape;
 
+export interface BoardMeta {
+  id: string;
+  name: string;
+  createdAt: number;
+  updatedAt: number;
+  thumbnail: string;
+  favorite: boolean;
+  shared: boolean;
+  background: BackgroundType;
+}
+
 export interface CanvasHandle {
   undo: () => void;
   redo: () => void;
@@ -97,4 +108,5 @@ export interface CanvasHandle {
   zoomOut: () => void;
   zoomReset: () => void;
   zoomLevel: number;
+  getSnapshot: () => string;
 }

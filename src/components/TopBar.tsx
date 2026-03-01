@@ -1,5 +1,5 @@
 import React, { useState, useReducer } from 'react';
-import { Undo2, Redo2, ZoomIn, ZoomOut, Menu, Download, Trash2, Monitor, MonitorSmartphone, Tablet } from 'lucide-react';
+import { Undo2, Redo2, ZoomIn, ZoomOut, Menu, Download, Trash2, Monitor, MonitorSmartphone, Tablet, ArrowLeft } from 'lucide-react';
 import type { CanvasHandle, InteractionMode } from '../types';
 import ModeModal from './ModeModal';
 
@@ -9,6 +9,9 @@ interface TopBarProps {
   onInstall: () => void;
   interactionMode: InteractionMode;
   onModeChange: (mode: InteractionMode) => void;
+  boardName?: string;
+  onBoardNameChange?: (name: string) => void;
+  onBack?: () => void;
 }
 
 const modeLabels: Record<InteractionMode, string> = {
@@ -23,9 +26,10 @@ const modeIcons: Record<InteractionMode, React.ReactNode> = {
   tablet: <Tablet size={16} />,
 };
 
-const TopBar: React.FC<TopBarProps> = ({ canvasRef, installPrompt, onInstall, interactionMode, onModeChange }) => {
+const TopBar: React.FC<TopBarProps> = ({ canvasRef, installPrompt, onInstall, interactionMode, onModeChange, boardName, onBoardNameChange, onBack }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showModeModal, setShowModeModal] = useState(false);
+  const [editingName, setEditingName] = useState(false);
   const [, forceUpdate] = useReducer(x => x + 1, 0);
 
   const act = (fn: () => void) => {
@@ -36,11 +40,49 @@ const TopBar: React.FC<TopBarProps> = ({ canvasRef, installPrompt, onInstall, in
   return (
     <div className="topbar">
       <div className="topbar-left">
+        {onBack ? (
+          <button className="topbar-btn" onClick={onBack} title="Retour à l'accueil">
+            <ArrowLeft size={20} />
+          </button>
+        ) : null}
         <img src="/icon-192.png" alt="Logo" className="topbar-logo" />
         <span className="topbar-brand">
           <span className="topbar-vs">VS-</span>
           <span className="topbar-edu">EduBoard</span>
         </span>
+        {boardName !== undefined && (
+          <>
+            <span className="topbar-separator">·</span>
+            {editingName ? (
+              <input
+                className="topbar-board-name-input"
+                defaultValue={boardName}
+                autoFocus
+                onBlur={(e) => {
+                  const val = e.target.value.trim();
+                  if (val && val !== boardName) onBoardNameChange?.(val);
+                  setEditingName(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const val = (e.target as HTMLInputElement).value.trim();
+                    if (val && val !== boardName) onBoardNameChange?.(val);
+                    setEditingName(false);
+                  }
+                  if (e.key === 'Escape') setEditingName(false);
+                }}
+              />
+            ) : (
+              <button
+                className="topbar-board-name"
+                onClick={() => setEditingName(true)}
+                title="Renommer le tableau"
+              >
+                {boardName}
+              </button>
+            )}
+          </>
+        )}
       </div>
 
       <div className="topbar-center">
