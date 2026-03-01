@@ -26,8 +26,8 @@ type ShapeCategory = 'freedraw' | 'closedShape' | 'lineShape' | 'text' | 'image'
 
 function getCategory(type: string): ShapeCategory {
   if (type === 'freedraw') return 'freedraw';
-  if (type === 'rectangle' || type === 'ellipse' || type === 'diamond' || type === 'roundedRect' || type === 'triangle' || type === 'star' || type === 'speechBubble') return 'closedShape';
-  if (type === 'line' || type === 'arrow' || type === 'curve') return 'lineShape';
+  if (type === 'rectangle' || type === 'ellipse' || type === 'diamond' || type === 'roundedRect' || type === 'triangle' || type === 'star' || type === 'speechBubble' || type === 'shape3d') return 'closedShape';
+  if (type === 'line' || type === 'arrow' || type === 'curve' || type === 'icon') return 'lineShape';
   if (type === 'text') return 'text';
   return 'image';
 }

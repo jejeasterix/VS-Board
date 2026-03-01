@@ -8,6 +8,7 @@ import {
 import { PenTool, HighlighterTool, EraserTool, PaintBucketTool } from './ToolIllustrations';
 import ModeModal from './ModeModal';
 import type { ToolType, BackgroundType, InteractionMode, CanvasHandle, EraserMode } from '../types';
+import { ICON_CATEGORIES, ICON_MAP } from '../iconData';
 
 interface ToolbarProps {
   tool: ToolType;
@@ -103,6 +104,47 @@ const LINES_TAB_ITEMS: ShapeCellDef[] = [
   )},
 ];
 
+const SHAPES_3D_TAB_ITEMS: ShapeCellDef[] = [
+  { id: 'shape3d', label: 'Cube', variant: 'cube', icon: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <polygon points="4,10 14,5 24,10 24,20 14,25 4,20" fill="none" />
+      <line x1="14" y1="5" x2="14" y2="25" /><line x1="4" y1="10" x2="24" y2="10" />
+    </svg>
+  )},
+  { id: 'shape3d', label: 'Cylindre', variant: 'cylinder', icon: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <ellipse cx="14" cy="7" rx="9" ry="3" />
+      <line x1="5" y1="7" x2="5" y2="21" /><line x1="23" y1="7" x2="23" y2="21" />
+      <ellipse cx="14" cy="21" rx="9" ry="3" />
+    </svg>
+  )},
+  { id: 'shape3d', label: 'Sphere', variant: 'sphere', icon: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="14" cy="14" r="10" />
+      <ellipse cx="11" cy="10" rx="3" ry="2" fill="none" strokeDasharray="2 2" />
+    </svg>
+  )},
+  { id: 'shape3d', label: 'Pyramide', variant: 'pyramid', icon: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <polygon points="14,3 4,25 24,25" fill="none" />
+      <line x1="14" y1="3" x2="16" y2="25" />
+    </svg>
+  )},
+  { id: 'shape3d', label: 'Cone', variant: 'cone', icon: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <line x1="14" y1="3" x2="5" y2="22" /><line x1="14" y1="3" x2="23" y2="22" />
+      <ellipse cx="14" cy="22" rx="9" ry="3" />
+    </svg>
+  )},
+  { id: 'shape3d', label: 'Prisme', variant: 'prism', icon: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <polygon points="4,25 12,5 20,25" fill="none" />
+      <line x1="12" y1="5" x2="24" y2="10" />
+      <line x1="20" y1="25" x2="24" y2="10" />
+    </svg>
+  )},
+];
+
 const SHAPE_TABS: { id: ShapeTab; label: string }[] = [
   { id: 'shapes', label: 'Formes' },
   { id: 'lines', label: 'Lignes' },
@@ -172,6 +214,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const [drawMode, setDrawMode] = useState<DrawMode>('pen');
   const [showModeModal, setShowModeModal] = useState(false);
   const [activeShapeTab, setActiveShapeTab] = useState<ShapeTab>('shapes');
+  const [iconCategory, setIconCategory] = useState(0);
   const shapeVariant = shapeVariantProp;
   const setShapeVariant = (v: string | undefined) => onShapeVariantChange?.(v);
 
@@ -205,7 +248,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   }, [openPopup]);
 
   const isDrawTool = tool === 'freedraw';
-  const isShapeTool = ['rectangle', 'ellipse', 'diamond', 'line', 'arrow', 'roundedRect', 'triangle', 'star', 'speechBubble', 'curve'].includes(tool);
+  const isShapeTool = ['rectangle', 'ellipse', 'diamond', 'line', 'arrow', 'roundedRect', 'triangle', 'star', 'speechBubble', 'curve', 'shape3d', 'icon'].includes(tool);
   const isLineTool = tool === 'line' || tool === 'arrow' || tool === 'curve';
   const showDrawToolbar = isDrawTool || tool === 'eraser' || tool === 'paintBucket';
   const showShapeToolbar = isShapeTool;
@@ -389,54 +432,112 @@ const Toolbar: React.FC<ToolbarProps> = ({
               </button>
             ))}
           </div>
-          <div className="fm-shapes-grid">
-            {activeShapeTab === 'shapes' && SHAPES_TAB_ITEMS.map((s, i) => (
-              <button
-                key={`${s.id}-${s.variant ?? i}`}
-                className={`fm-shape-cell ${tool === s.id && shapeVariant === s.variant ? 'active' : ''}`}
-                onClick={() => {
-                  setShapeVariant(s.variant);
-                  onStrokeOpacityChange(1);
-                  if (isTactile && tool === s.id && shapeVariant === s.variant) {
-                    onToolChange('select');
-                  } else {
-                    onToolChange(s.id);
-                  }
-                  closeAll();
-                }}
-                title={s.label}
-              >
-                <span className="fm-shape-cell-icon">{s.icon}</span>
-                <span className="fm-shape-cell-label">{s.label}</span>
-              </button>
-            ))}
-            {activeShapeTab === 'lines' && LINES_TAB_ITEMS.map((s, i) => (
-              <button
-                key={`${s.id}-${s.variant ?? i}`}
-                className={`fm-shape-cell ${tool === s.id && shapeVariant === s.variant ? 'active' : ''}`}
-                onClick={() => {
-                  setShapeVariant(s.variant);
-                  onStrokeOpacityChange(1);
-                  if (isTactile && tool === s.id && shapeVariant === s.variant) {
-                    onToolChange('select');
-                  } else {
-                    onToolChange(s.id);
-                  }
-                  closeAll();
-                }}
-                title={s.label}
-              >
-                <span className="fm-shape-cell-icon">{s.icon}</span>
-                <span className="fm-shape-cell-label">{s.label}</span>
-              </button>
-            ))}
-            {activeShapeTab === '3d' && (
-              <div className="fm-shapes-placeholder">A venir</div>
-            )}
-            {activeShapeTab === 'icons' && (
-              <div className="fm-shapes-placeholder">A venir</div>
-            )}
-          </div>
+          {activeShapeTab !== 'icons' && (
+            <div className="fm-shapes-grid">
+              {activeShapeTab === 'shapes' && SHAPES_TAB_ITEMS.map((s, i) => (
+                <button
+                  key={`${s.id}-${s.variant ?? i}`}
+                  className={`fm-shape-cell ${tool === s.id && shapeVariant === s.variant ? 'active' : ''}`}
+                  onClick={() => {
+                    setShapeVariant(s.variant);
+                    onStrokeOpacityChange(1);
+                    if (isTactile && tool === s.id && shapeVariant === s.variant) {
+                      onToolChange('select');
+                    } else {
+                      onToolChange(s.id);
+                    }
+                    closeAll();
+                  }}
+                  title={s.label}
+                >
+                  <span className="fm-shape-cell-icon">{s.icon}</span>
+                  <span className="fm-shape-cell-label">{s.label}</span>
+                </button>
+              ))}
+              {activeShapeTab === 'lines' && LINES_TAB_ITEMS.map((s, i) => (
+                <button
+                  key={`${s.id}-${s.variant ?? i}`}
+                  className={`fm-shape-cell ${tool === s.id && shapeVariant === s.variant ? 'active' : ''}`}
+                  onClick={() => {
+                    setShapeVariant(s.variant);
+                    onStrokeOpacityChange(1);
+                    if (isTactile && tool === s.id && shapeVariant === s.variant) {
+                      onToolChange('select');
+                    } else {
+                      onToolChange(s.id);
+                    }
+                    closeAll();
+                  }}
+                  title={s.label}
+                >
+                  <span className="fm-shape-cell-icon">{s.icon}</span>
+                  <span className="fm-shape-cell-label">{s.label}</span>
+                </button>
+              ))}
+              {activeShapeTab === '3d' && SHAPES_3D_TAB_ITEMS.map((s, i) => (
+                <button
+                  key={`${s.id}-${s.variant ?? i}`}
+                  className={`fm-shape-cell ${tool === s.id && shapeVariant === s.variant ? 'active' : ''}`}
+                  onClick={() => {
+                    setShapeVariant(s.variant);
+                    onStrokeOpacityChange(1);
+                    if (isTactile && tool === s.id && shapeVariant === s.variant) {
+                      onToolChange('select');
+                    } else {
+                      onToolChange(s.id);
+                    }
+                    closeAll();
+                  }}
+                  title={s.label}
+                >
+                  <span className="fm-shape-cell-icon">{s.icon}</span>
+                  <span className="fm-shape-cell-label">{s.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {activeShapeTab === 'icons' && (
+            <>
+              <div className="fm-icon-categories">
+                {ICON_CATEGORIES.map((cat, i) => (
+                  <button
+                    key={cat.label}
+                    className={`fm-icon-cat-btn ${iconCategory === i ? 'active' : ''}`}
+                    onClick={() => setIconCategory(i)}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+              <div className="fm-shapes-grid">
+                {ICON_CATEGORIES[iconCategory]?.icons.map(ic => {
+                  const IconComp = ICON_MAP[ic.name];
+                  return (
+                    <button
+                      key={ic.name}
+                      className={`fm-shape-cell ${tool === 'icon' && shapeVariant === ic.name ? 'active' : ''}`}
+                      onClick={() => {
+                        setShapeVariant(ic.name);
+                        onStrokeOpacityChange(1);
+                        if (isTactile && tool === 'icon' && shapeVariant === ic.name) {
+                          onToolChange('select');
+                        } else {
+                          onToolChange('icon');
+                        }
+                        closeAll();
+                      }}
+                      title={ic.label}
+                    >
+                      <span className="fm-shape-cell-icon">
+                        {IconComp ? <IconComp size={24} /> : null}
+                      </span>
+                      <span className="fm-shape-cell-label">{ic.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       )}
 

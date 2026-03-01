@@ -140,6 +140,22 @@ export interface CurveShape extends BaseShape {
   controlY: number;
 }
 
+export type Shape3dVariant = 'cube' | 'cylinder' | 'sphere' | 'pyramid' | 'cone' | 'prism';
+
+export interface Shape3dShape extends BaseShape {
+  type: 'shape3d';
+  width: number;
+  height: number;
+  variant: Shape3dVariant;
+}
+
+export interface IconShape extends BaseShape {
+  type: 'icon';
+  width: number;
+  height: number;
+  iconName: string;
+}
+
 export type Shape =
   | RectangleShape
   | EllipseShape
@@ -153,7 +169,9 @@ export type Shape =
   | TriangleShape
   | StarShape
   | SpeechBubbleShape
-  | CurveShape;
+  | CurveShape
+  | Shape3dShape
+  | IconShape;
 
 export interface BoardMeta {
   id: string;

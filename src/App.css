@@ -244,6 +244,7 @@
   max-height: 420px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(24px) saturate(1.8);
   -webkit-backdrop-filter: blur(24px) saturate(1.8);
@@ -298,7 +299,8 @@
   gap: 4px;
   padding: 8px;
   overflow-y: auto;
-  max-height: 360px;
+  min-height: 0;
+  flex: 1;
 }
 
 .fm-shape-cell {
@@ -355,6 +357,43 @@
   font-size: 13px;
   color: #8e8e93;
   font-style: italic;
+}
+
+.fm-icon-categories {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  max-height: 82px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.fm-icon-categories::-webkit-scrollbar {
+  display: none;
+}
+
+.fm-icon-cat-btn {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.05);
+  font-size: 11px;
+  color: #444;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.fm-icon-cat-btn:hover {
+  background: rgba(0,0,0,0.1);
+}
+.fm-icon-cat-btn.active {
+  background: rgba(0,122,255,0.12);
+  color: #007aff;
 }
 
 /* ============================================================

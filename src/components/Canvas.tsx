@@ -3,9 +3,11 @@ import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, f
 import { Stage, Layer, Rect, Ellipse, Line, Arrow, Text, Transformer, Image as KonvaImage, Star, Path, Circle, Arc, Group } from 'react-konva';
 import Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
-import type { Shape, ToolType, BackgroundType, CanvasHandle, InteractionMode, BaseShape, EraserMode, TextSegment, TextShape as TextShapeType, EllipseShape, StarShape } from '../types';
+import type { Shape, ToolType, BackgroundType, CanvasHandle, InteractionMode, BaseShape, EraserMode, TextSegment, TextShape as TextShapeType, EllipseShape, StarShape, Shape3dShape, IconShape } from '../types';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getTrianglePoints, getSpeechBubblePath, getCurvePath } from '../shapeData';
+import { get3dPaths } from '../shape3dPaths';
+import { getIconImage } from '../iconData';
 import SelectionToolbar from './SelectionToolbar';
 
 interface CanvasProps {
@@ -93,7 +95,7 @@ function historyReducer(state: HistoryState, action: HistoryAction): HistoryStat
 
 const getDiamondPoints = (w: number, h: number) => [w / 2, 0, w, h / 2, w / 2, h, 0, h / 2];
 
-const DRAW_TOOLS: ToolType[] = ['freedraw', 'rectangle', 'ellipse', 'diamond', 'line', 'arrow', 'roundedRect', 'triangle', 'star', 'speechBubble', 'curve'];
+const DRAW_TOOLS: ToolType[] = ['freedraw', 'rectangle', 'ellipse', 'diamond', 'line', 'arrow', 'roundedRect', 'triangle', 'star', 'speechBubble', 'curve', 'shape3d', 'icon'];
 
 // ---- Paint bucket helpers ----
 const _measureCanvas = document.createElement('canvas');
@@ -795,7 +797,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     }
 
     // Start drawing shapes
-    if (['rectangle', 'ellipse', 'diamond', 'line', 'arrow', 'freedraw', 'roundedRect', 'triangle', 'star', 'speechBubble', 'curve'].includes(tool)) {
+    if (['rectangle', 'ellipse', 'diamond', 'line', 'arrow', 'freedraw', 'roundedRect', 'triangle', 'star', 'speechBubble', 'curve', 'shape3d', 'icon'].includes(tool)) {
       isDrawing.current = true;
       drawStart.current = pos;
 
@@ -831,6 +833,11 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
       } else if (tool === 'speechBubble') {
         const v = (shapeVariant === 'round' || shapeVariant === 'rect') ? shapeVariant : 'round';
         setDrawingShape({ ...base, type: 'speechBubble', width: 0, height: 0, variant: v, tailX: 0, tailY: 0 } as Shape);
+      } else if (tool === 'shape3d') {
+        const v3d = (['cube', 'cylinder', 'sphere', 'pyramid', 'cone', 'prism'].includes(shapeVariant || '') ? shapeVariant : 'cube') as Shape3dShape['variant'];
+        setDrawingShape({ ...base, type: 'shape3d', width: 0, height: 0, variant: v3d } as Shape);
+      } else if (tool === 'icon') {
+        setDrawingShape({ ...base, type: 'icon', width: 0, height: 0, iconName: shapeVariant || 'Calculator', fill: 'transparent' } as Shape);
       }
     }
   }, [tool, shapeVariant, strokeColor, strokeWidth, strokeOpacity, eraserMode, eraserWidth, onBgColorChange, paintColor, fillColor, getCanvasPoint, addImage, generateId, isTactile, stageScale]);
@@ -981,6 +988,15 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
       const w = Math.abs(dx);
       const h = Math.abs(dy);
       setDrawingShape(prev => prev ? { ...prev, x, y, width: w, height: h, tailX: w * 0.3, tailY: h + 20 } as Shape : null);
+    } else if (drawingShape.type === 'shape3d') {
+      const x = dx < 0 ? pos.x : drawStart.current.x;
+      const y = dy < 0 ? pos.y : drawStart.current.y;
+      setDrawingShape(prev => prev ? { ...prev, x, y, width: Math.abs(dx), height: Math.abs(dy) } as Shape : null);
+    } else if (drawingShape.type === 'icon') {
+      const side = Math.max(Math.abs(dx), Math.abs(dy));
+      const x = dx < 0 ? drawStart.current.x - side : drawStart.current.x;
+      const y = dy < 0 ? drawStart.current.y - side : drawStart.current.y;
+      setDrawingShape(prev => prev ? { ...prev, x, y, width: side, height: side } as Shape : null);
     }
   }, [drawingShape, tool, shapeVariant, eraserMode, eraserWidth, stageScale, getCanvasPoint, generateId]);
 
@@ -1018,7 +1034,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         const ids = shapesRef.current.filter(s => {
           // Get shape bounding box (approximate)
           let sx = s.x, sy = s.y, sw = 0, sh = 0;
-          if (s.type === 'rectangle' || s.type === 'diamond' || s.type === 'image' || s.type === 'roundedRect' || s.type === 'triangle' || s.type === 'speechBubble') {
+          if (s.type === 'rectangle' || s.type === 'diamond' || s.type === 'image' || s.type === 'roundedRect' || s.type === 'triangle' || s.type === 'speechBubble' || s.type === 'shape3d' || s.type === 'icon') {
             sw = (s as any).width * (s.scaleX ?? 1);
             sh = (s as any).height * (s.scaleY ?? 1);
           } else if (s.type === 'star') {
@@ -1065,7 +1081,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
 
     // Only add shape if it has some size
     let hasSize = true;
-    if (drawingShape.type === 'rectangle' || drawingShape.type === 'diamond' || drawingShape.type === 'roundedRect' || drawingShape.type === 'triangle' || drawingShape.type === 'speechBubble') {
+    if (drawingShape.type === 'rectangle' || drawingShape.type === 'diamond' || drawingShape.type === 'roundedRect' || drawingShape.type === 'triangle' || drawingShape.type === 'speechBubble' || drawingShape.type === 'shape3d' || drawingShape.type === 'icon') {
       const s = drawingShape as { width: number; height: number };
       hasSize = s.width > 2 || s.height > 2;
     } else if (drawingShape.type === 'ellipse') {
@@ -1485,6 +1501,39 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         return <Path key={k} {...common} data={getSpeechBubblePath(shape.width, shape.height, shape.variant, shape.tailX, shape.tailY)} />;
       case 'curve':
         return <Path key={k} {...common} data={getCurvePath(shape.points[2], shape.points[3], shape.controlX, shape.controlY)} />;
+      case 'shape3d': {
+        const s3d = shape as Shape3dShape;
+        const faces = get3dPaths(s3d.width, s3d.height, s3d.variant, s3d.fill, s3d.stroke);
+        return (
+          <Group key={k} id={shape.id} x={shape.x} y={shape.y} rotation={shape.rotation}
+            scaleX={shape.scaleX} scaleY={shape.scaleY}
+            draggable={common.draggable}
+            onClick={common.onClick}
+            onTap={common.onTap as any}
+            onDragEnd={common.onDragEnd}
+            onTransformEnd={common.onTransformEnd}
+            {...(shape.opacity != null ? { opacity: shape.opacity } : {})}
+          >
+            {/* Hit area for easy selection */}
+            <Rect width={s3d.width} height={s3d.height} fill="transparent" stroke="transparent" />
+            {faces.map((f, i) => (
+              <Path key={i} data={f.data} fill={f.fill} stroke={f.stroke}
+                strokeWidth={shape.strokeWidth}
+                dash={f.dash}
+                lineJoin="round" lineCap="round"
+                listening={false} />
+            ))}
+          </Group>
+        );
+      }
+      case 'icon': {
+        const sIcon = shape as IconShape;
+        const sz = Math.max(sIcon.width, sIcon.height);
+        const img = getIconImage(sIcon.iconName, sIcon.stroke, sz, () => layerRef.current?.batchDraw());
+        if (!img) return null;
+        return <KonvaImage key={k} {...common} image={img} width={sIcon.width} height={sIcon.height}
+          stroke="transparent" strokeWidth={0} />;
+      }
     }
   }, [selectedIds, tool, isTactile, isActiveDraw, handleShapeClick, handleDragEnd, handleTransformEnd, handleDblClick, loadedImages, stageScale]);
 
