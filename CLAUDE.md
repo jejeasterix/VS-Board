@@ -30,6 +30,8 @@ src/
 ├── App.tsx                     # Routes + BoardPage (logique board)
 ├── App.css                     # Tous les styles (single CSS file)
 ├── types.ts                    # Types TypeScript (Shape, BoardMeta, CanvasHandle…)
+├── shape3dPaths.ts             # Chemins SVG pour formes 3D isométriques (cube, cylindre, sphère, pyramide, cône, prisme)
+├── iconData.ts                 # ~150 icônes Lucide en 15 catégories + rendu SVG→Image pour Konva
 ├── services/
 │   └── boardStorage.ts         # Persistance localStorage (meta) + IndexedDB (shapes)
 └── components/
@@ -62,6 +64,16 @@ L'interface du board est composée de 3 pilules flottantes :
 2. **Minibar haut-centre** : sélection outil (select/hand/draw/shapes/text/image) + menu hamburger (mode, export, effacer)
 3. **Pilule bas-gauche** : undo + zoom (- / % / +)
 4. **Toolbar bas-centre** : outils contextuels (dessin, couleurs, épaisseur…)
+
+## Outils de dessin
+
+Le panneau Formes comporte 4 onglets :
+- **Formes** : rectangle, cercle, triangle, étoile, losange, hexagone, flèche, coeur, éclair
+- **Lignes** : ligne droite, flèche, double-flèche, courbe, polyligne
+- **3D** : cube, cylindre, sphère, pyramide, cône, prisme (rendu isométrique via `shape3dPaths.ts`)
+- **Icônes** : ~150 icônes Lucide en 15 catégories (Maths, Sciences, École, Musique, etc.) via `iconData.ts`
+
+Autres outils : sélection, main (pan), crayon (freehand), texte, image, pot de peinture (fill)
 
 ## Modes d'interaction
 
