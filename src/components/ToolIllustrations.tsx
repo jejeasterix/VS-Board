@@ -49,32 +49,32 @@ export const HighlighterTool: React.FC<ToolProps> = ({ color = '#facc15', active
   </svg>
 );
 
-// Paint bucket - small can with paint drip
+// Paint bucket - wider can, same height as eraser, floats above preview line
 export const PaintBucketTool: React.FC<ToolProps> = ({ color = '#3b82f6', active }) => (
-  <svg width="26" height="72" viewBox="0 0 26 72" fill="none" style={{ filter: active ? 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))' : undefined }}>
+  <svg width="32" height="72" viewBox="0 0 32 72" fill="none" style={{ filter: active ? 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))' : undefined }}>
     {/* Handle / bail */}
-    <path d="M8 10 Q13 2 18 10" stroke="#9ca3af" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-    {/* Bucket body */}
-    <path d="M5 14 L7 52 L19 52 L21 14 Z" fill="#9ca3af" />
-    {/* Bucket front face */}
-    <path d="M5 14 L7 52 L13 52 L13 14 Z" fill="#b0b0b0" />
+    <path d="M9 18 Q16 9 23 18" stroke="#9ca3af" strokeWidth="2" fill="none" strokeLinecap="round" />
+    {/* Bucket body (trapezoid) */}
+    <path d="M5 20 L8 54 L24 54 L27 20 Z" fill="#9ca3af" />
+    {/* Bucket front face (lighter) */}
+    <path d="M5 20 L8 54 L16 54 L16 20 Z" fill="#b0b0b0" />
     {/* Top rim */}
-    <ellipse cx="13" cy="14" rx="8" ry="3" fill="#c4c4c4" stroke="#9ca3af" strokeWidth="0.8" />
+    <ellipse cx="16" cy="20" rx="11" ry="3.5" fill="#c4c4c4" stroke="#9ca3af" strokeWidth="0.8" />
     {/* Inner rim */}
-    <ellipse cx="13" cy="14" rx="6" ry="2" fill="#8e8e93" opacity="0.4" />
+    <ellipse cx="16" cy="20" rx="8.5" ry="2.5" fill="#8e8e93" opacity="0.4" />
     {/* Metal bands */}
-    <rect x="6" y="22" width="14" height="1.5" rx="0.5" fill="#d1d5db" opacity="0.7" />
-    <rect x="6" y="42" width="14" height="1.5" rx="0.5" fill="#d1d5db" opacity="0.7" />
+    <rect x="7" y="30" width="18" height="1.5" rx="0.5" fill="#d1d5db" opacity="0.7" />
+    <rect x="7" y="44" width="18" height="1.5" rx="0.5" fill="#d1d5db" opacity="0.7" />
     {/* Paint inside bucket (visible at top) */}
-    <ellipse cx="13" cy="14" rx="5.5" ry="1.8" fill={color} opacity="0.8" />
+    <ellipse cx="16" cy="20" rx="8" ry="2.2" fill={color} opacity="0.85" />
     {/* Paint drip on side */}
-    <path d="M19 16 Q21 16 21 22 Q21 28 20 32" stroke={color} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+    <path d="M25 23 Q28 23 28 30 Q28 38 27 43" stroke={color} strokeWidth="3" fill="none" strokeLinecap="round" />
     {/* Paint drop falling */}
-    <ellipse cx="20" cy="36" rx="2" ry="2.5" fill={color} />
+    <ellipse cx="27" cy="47" rx="2.2" ry="2.8" fill={color} />
     {/* Bottom rim */}
-    <ellipse cx="13" cy="52" rx="6" ry="2" fill="#8e8e93" />
-    {/* Stroke preview */}
-    <line x1="3" y1="71" x2="23" y2="71" stroke={color} strokeWidth="4" strokeLinecap="round" />
+    <ellipse cx="16" cy="54" rx="8" ry="2.5" fill="#8e8e93" />
+    {/* Stroke preview (floating below with gap) */}
+    <line x1="4" y1="71" x2="28" y2="71" stroke={color} strokeWidth="4" strokeLinecap="round" />
   </svg>
 );
 

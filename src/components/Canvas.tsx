@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef, useReducer } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Stage, Layer, Rect, Ellipse, Line, Arrow, Text, Transformer, Image as KonvaImage, Star, Path, Circle, Arc } from 'react-konva';
+import { Stage, Layer, Rect, Ellipse, Line, Arrow, Text, Transformer, Image as KonvaImage, Star, Path, Circle, Arc, Group } from 'react-konva';
 import Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
-import type { Shape, ToolType, BackgroundType, CanvasHandle, InteractionMode, BaseShape, EraserMode, PaintMode } from '../types';
+import type { Shape, ToolType, BackgroundType, CanvasHandle, InteractionMode, BaseShape, EraserMode, TextSegment, TextShape as TextShapeType, EllipseShape, StarShape } from '../types';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getTrianglePoints, getSpeechBubblePath, getCurvePath } from '../shapeData';
 import SelectionToolbar from './SelectionToolbar';
@@ -17,7 +17,9 @@ interface CanvasProps {
   strokeOpacity: number;
   eraserMode: EraserMode;
   eraserWidth: number;
-  paintMode: PaintMode;
+  bgColor: string;
+  onBgColorChange: (color: string) => void;
+  paintColor: string;
   fontSize: number;
   background: BackgroundType;
   onToolChange: (tool: ToolType) => void;
@@ -92,6 +94,114 @@ function historyReducer(state: HistoryState, action: HistoryAction): HistoryStat
 const getDiamondPoints = (w: number, h: number) => [w / 2, 0, w, h / 2, w / 2, h, 0, h / 2];
 
 const DRAW_TOOLS: ToolType[] = ['freedraw', 'rectangle', 'ellipse', 'diamond', 'line', 'arrow', 'roundedRect', 'triangle', 'star', 'speechBubble', 'curve'];
+
+// ---- Paint bucket helpers ----
+const _measureCanvas = document.createElement('canvas');
+const _measureCtx = _measureCanvas.getContext('2d')!;
+
+// Auto-detect if click is near the border (stroke) or interior (fill) of a shape
+function isNearBorder(shape: Shape, clickX: number, clickY: number, stageScale: number): boolean {
+  const dx = clickX - shape.x;
+  const dy = clickY - shape.y;
+  const angle = -(shape.rotation || 0) * Math.PI / 180;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const lx = (dx * cos - dy * sin) / (shape.scaleX || 1);
+  const ly = (dx * sin + dy * cos) / (shape.scaleY || 1);
+  const threshold = Math.max(shape.strokeWidth * 2, 12 / stageScale);
+
+  if (shape.type === 'ellipse') {
+    const s = shape as EllipseShape;
+    const nx = lx / s.radiusX;
+    const ny = ly / s.radiusY;
+    const d = Math.sqrt(nx * nx + ny * ny);
+    return d > 1 - threshold / Math.min(s.radiusX, s.radiusY);
+  }
+  if (shape.type === 'star') {
+    const s = shape as StarShape;
+    const d = Math.sqrt(lx * lx + ly * ly);
+    return d > s.outerRadius - threshold;
+  }
+  // Rectangle-like shapes
+  const w = 'width' in shape ? (shape as BaseShape & { width: number }).width : 0;
+  const h = 'height' in shape ? (shape as BaseShape & { height: number }).height : 0;
+  if (w > 0 && h > 0) {
+    return lx < threshold || lx > w - threshold || ly < threshold || ly > h - threshold;
+  }
+  return false;
+}
+
+// Find which word was clicked in a text shape (returns char indices)
+function findWordAtClick(
+  text: string, fontSize: number, maxWidth: number,
+  localX: number, localY: number
+): { start: number, end: number } | null {
+  _measureCtx.font = `${fontSize}px sans-serif`;
+  const lineHeight = fontSize * 1.2;
+  const regex = /\S+|\s+/g;
+  let match;
+  let x = 0, y = 0;
+
+  while ((match = regex.exec(text)) !== null) {
+    const token = match[0];
+    const start = match.index;
+    const isSpace = /^\s+$/.test(token);
+    const w = _measureCtx.measureText(token).width;
+
+    if (!isSpace && x + w > maxWidth && x > 0) {
+      x = 0;
+      y += lineHeight;
+    }
+    if (!isSpace && localY >= y && localY < y + lineHeight && localX >= x && localX < x + w) {
+      return { start, end: start + token.length };
+    }
+    x += w;
+  }
+  return null;
+}
+
+interface PositionedWord {
+  text: string;
+  x: number;
+  y: number;
+  fill: string;
+}
+
+// Layout text into positioned colored words for segmented rendering
+function layoutTextWords(
+  text: string, fontSize: number, maxWidth: number,
+  segments: TextSegment[] | undefined, defaultFill: string
+): PositionedWord[] {
+  _measureCtx.font = `${fontSize}px sans-serif`;
+  const lineHeight = fontSize * 1.2;
+  const result: PositionedWord[] = [];
+  const regex = /\S+|\s+/g;
+  let match;
+  let x = 0, y = 0;
+
+  while ((match = regex.exec(text)) !== null) {
+    const token = match[0];
+    const start = match.index;
+    const isSpace = /^\s+$/.test(token);
+    const w = _measureCtx.measureText(token).width;
+
+    if (!isSpace && x + w > maxWidth && x > 0) {
+      x = 0;
+      y += lineHeight;
+    }
+    if (!isSpace) {
+      let fill = defaultFill;
+      if (segments) {
+        for (const seg of segments) {
+          if (start >= seg.start && start < seg.end) { fill = seg.fill; break; }
+        }
+      }
+      result.push({ text: token, x, y, fill });
+    }
+    x += w;
+  }
+  return result;
+}
 
 // Distance from point (px,py) to the line segment (x1,y1)-(x2,y2)
 function segmentDist(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
@@ -217,7 +327,7 @@ function applyStrokeErase(
 }
 
 const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
-  tool, shapeVariant, strokeColor, fillColor, strokeWidth, strokeOpacity, eraserMode, eraserWidth, paintMode, fontSize, background, onToolChange, interactionMode,
+  tool, shapeVariant, strokeColor, fillColor, strokeWidth, strokeOpacity, eraserMode, eraserWidth, bgColor, onBgColorChange, paintColor, fontSize, background, onToolChange, interactionMode,
   initialShapes, onShapesChange
 }, ref) => {
   const isTactile = interactionMode === 'eni' || interactionMode === 'tablet';
@@ -575,28 +685,64 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
       return;
     }
 
-    // Paint bucket: click on a shape to change its color
+    // Paint bucket: click to change color (auto-detect stroke vs fill)
     if (tool === 'paintBucket') {
-      if (!clickedOnEmpty) {
-        const id = e.target.id();
-        if (id) {
-          const newShapes = shapesRef.current.map(s => {
-            if (s.id !== id) return s;
-            if (paintMode === 'stroke') {
-              // Contour mode: always change stroke
-              return { ...s, stroke: strokeColor };
-            }
-            // Fill mode
-            if (s.type === 'freedraw' || s.type === 'line' || s.type === 'arrow' || s.type === 'curve') {
-              // Lines have no fill → change stroke instead
-              return { ...s, stroke: strokeColor };
-            }
-            // Text + closed shapes → change fill
-            return { ...s, fill: strokeColor };
-          });
+      if (clickedOnEmpty) {
+        // Click on empty → change background color
+        onBgColorChange(paintColor);
+        return;
+      }
+      // Find the shape ID (may be on target or parent for segmented text Groups)
+      const targetId = e.target.id() || e.target.parent?.id() || '';
+      if (!targetId) return;
+      const shape = shapesRef.current.find(s => s.id === targetId);
+      if (!shape) return;
+
+      // Text → per-word coloring
+      if (shape.type === 'text') {
+        const dx = pos.x - shape.x;
+        const dy = pos.y - shape.y;
+        const angle = -(shape.rotation || 0) * Math.PI / 180;
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const lx = (dx * cos - dy * sin) / (shape.scaleX || 1);
+        const ly = (dx * sin + dy * cos) / (shape.scaleY || 1);
+        const word = findWordAtClick(shape.text, shape.fontSize, shape.width || 9999, lx, ly);
+        if (word) {
+          const existing = (shape as TextShapeType).segments || [];
+          // Replace or add segment for this word
+          const filtered = existing.filter(seg => seg.start !== word.start || seg.end !== word.end);
+          const newSegments = [...filtered, { start: word.start, end: word.end, fill: paintColor }];
+          const newShapes = shapesRef.current.map(s =>
+            s.id === targetId ? { ...s, segments: newSegments } as Shape : s
+          );
+          dispatch({ type: 'PUSH', shapes: newShapes });
+        } else {
+          // Click outside any word → change entire text color
+          const newShapes = shapesRef.current.map(s =>
+            s.id === targetId ? { ...s, fill: paintColor, segments: undefined } as Shape : s
+          );
           dispatch({ type: 'PUSH', shapes: newShapes });
         }
+        return;
       }
+
+      // Lines/freedraw → always stroke (no fill area)
+      if (['freedraw', 'line', 'arrow', 'curve'].includes(shape.type)) {
+        const newShapes = shapesRef.current.map(s =>
+          s.id === targetId ? { ...s, stroke: paintColor } : s
+        );
+        dispatch({ type: 'PUSH', shapes: newShapes });
+        return;
+      }
+
+      // Closed shapes → auto-detect stroke vs fill
+      const nearBorder = isNearBorder(shape, pos.x, pos.y, stageScale);
+      const newShapes = shapesRef.current.map(s => {
+        if (s.id !== targetId) return s;
+        return nearBorder ? { ...s, stroke: paintColor } : { ...s, fill: paintColor };
+      });
+      dispatch({ type: 'PUSH', shapes: newShapes });
       return;
     }
 
@@ -687,7 +833,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         setDrawingShape({ ...base, type: 'speechBubble', width: 0, height: 0, variant: v, tailX: 0, tailY: 0 } as Shape);
       }
     }
-  }, [tool, shapeVariant, strokeColor, strokeWidth, strokeOpacity, eraserMode, eraserWidth, paintMode, fillColor, getCanvasPoint, addImage, generateId, isTactile]);
+  }, [tool, shapeVariant, strokeColor, strokeWidth, strokeOpacity, eraserMode, eraserWidth, onBgColorChange, paintColor, fillColor, getCanvasPoint, addImage, generateId, isTactile, stageScale]);
 
   const handleMouseMove = useCallback((e: KonvaEventObject<MouseEvent | TouchEvent>) => {
     // Pinch zoom
@@ -1010,10 +1156,12 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
   // ---- Double-click for text editing ----
   const handleDblClick = useCallback((e: KonvaEventObject<MouseEvent | TouchEvent>) => {
     const target = e.target;
-    if (target.className === 'Text') {
+    // Support double-click on segmented text Groups (child Text or Rect)
+    const shapeId = target.id() || target.parent?.id() || '';
+    if (target.className === 'Text' || target.className === 'Rect' || target.parent?.className === 'Group') {
       const pointer = stageRef.current?.getPointerPosition();
       if (pointer) {
-        const shape = shapesRef.current.find(s => s.id === target.id());
+        const shape = shapesRef.current.find(s => s.id === shapeId);
         if (shape && shape.type === 'text') {
           textSubmittedRef.current = false;
           textCancelledRef.current = false;
@@ -1045,7 +1193,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     // Check if editing existing text (by ID)
     if (textEditing.id) {
       const newShapes = shapesRef.current.map(s =>
-        s.id === textEditing.id ? { ...s, text } as Shape : s
+        s.id === textEditing.id ? { ...s, text, segments: undefined } as Shape : s
       );
       dispatch({ type: 'PUSH', shapes: newShapes });
     } else {
@@ -1248,10 +1396,35 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
       case 'freedraw':
         return <Line key={k} {...common} points={shape.points} tension={0.3} lineCap="round" lineJoin="round"
           perfectDrawEnabled={false} />;
-      case 'text':
+      case 'text': {
+        if (shape.segments && shape.segments.length > 0) {
+          const words = layoutTextWords(shape.text, shape.fontSize, shape.width || 9999, shape.segments, shape.fill);
+          const totalHeight = words.length > 0
+            ? words[words.length - 1].y + shape.fontSize * 1.2
+            : shape.fontSize * 1.2;
+          return (
+            <Group key={k} id={shape.id}
+              x={shape.x} y={shape.y}
+              rotation={shape.rotation} scaleX={shape.scaleX} scaleY={shape.scaleY}
+              opacity={shape.opacity ?? 1}
+              draggable={tool === 'select'}
+              onDragEnd={(ev: KonvaEventObject<DragEvent>) => handleDragEnd(shape.id, ev)}
+              onTransformEnd={(ev: KonvaEventObject<Event>) => handleTransformEnd(shape.id, ev)}
+              onDblClick={handleDblClick} onDblTap={handleDblClick as any}
+            >
+              <Rect width={shape.width || 200} height={totalHeight} fill="transparent" />
+              {words.map((w, i) => (
+                <Text key={i} x={w.x} y={w.y} text={w.text}
+                  fontSize={shape.fontSize} fontFamily="sans-serif" fill={w.fill}
+                  listening={false} />
+              ))}
+            </Group>
+          );
+        }
         return <Text key={k} {...common} text={shape.text} fontSize={shape.fontSize}
           fontFamily="sans-serif" width={shape.width} fill={shape.fill}
           onDblClick={handleDblClick} onDblTap={handleDblClick as any} />;
+      }
       case 'image': {
         const img = loadedImages[shape.src];
         if (!img) return null;
@@ -1633,7 +1806,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         <Layer listening={false}>
           <Rect
             x={-10000} y={-10000} width={20000} height={20000}
-            fill="#ffffff" listening={false}
+            fill={bgColor} listening={false}
           />
           {renderBackground()}
         </Layer>

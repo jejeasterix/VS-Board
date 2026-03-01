@@ -4,7 +4,7 @@ import { ArrowLeft, Undo2, ZoomIn, ZoomOut } from 'lucide-react';
 import Canvas from './components/Canvas';
 import Toolbar from './components/Toolbar';
 import HomePage from './components/HomePage';
-import type { ToolType, BackgroundType, CanvasHandle, InteractionMode, Shape, EraserMode, PaintMode } from './types';
+import type { ToolType, BackgroundType, CanvasHandle, InteractionMode, Shape, EraserMode } from './types';
 import { loadBoardData, saveBoardData, getBoardMeta, saveBoardMeta } from './services/boardStorage';
 import './App.css';
 
@@ -19,7 +19,8 @@ function BoardPage() {
   const [strokeOpacity, setStrokeOpacity] = useState(1);
   const [eraserMode, setEraserMode] = useState<EraserMode>('click');
   const [eraserWidth, setEraserWidth] = useState(40);
-  const [paintMode, setPaintMode] = useState<PaintMode>('fill');
+  const [bgColor, setBgColor] = useState('#ffffff');
+  const [paintColor, setPaintColor] = useState('#3b82f6');
   const [shapeVariant, setShapeVariant] = useState<string | undefined>(undefined);
   const [fontSize, setFontSize] = useState(24);
   const [background, setBackground] = useState<BackgroundType>('blank');
@@ -49,6 +50,7 @@ function BoardPage() {
     if (meta) {
       setBoardName(meta.name);
       setBackground(meta.background);
+      if (meta.bgColor) setBgColor(meta.bgColor);
     }
     loadBoardData(id).then(data => {
       setInitialShapes(data.shapes);
@@ -95,11 +97,11 @@ function BoardPage() {
       const snapshot = canvasRef.current?.getSnapshot() ?? '';
       const meta = getBoardMeta(id);
       if (meta) {
-        saveBoardMeta({ ...meta, updatedAt: Date.now(), thumbnail: snapshot, background });
+        saveBoardMeta({ ...meta, updatedAt: Date.now(), thumbnail: snapshot, background, bgColor });
       }
     }
     navigate('/');
-  }, [id, navigate, background]);
+  }, [id, navigate, background, bgColor]);
 
   // Save on unmount
   useEffect(() => {
@@ -137,7 +139,9 @@ function BoardPage() {
         strokeOpacity={strokeOpacity}
         eraserMode={eraserMode}
         eraserWidth={eraserWidth}
-        paintMode={paintMode}
+        bgColor={bgColor}
+        onBgColorChange={setBgColor}
+        paintColor={paintColor}
         fontSize={fontSize}
         background={background}
         onToolChange={setTool}
@@ -225,8 +229,8 @@ function BoardPage() {
         onEraserModeChange={setEraserMode}
         eraserWidth={eraserWidth}
         onEraserWidthChange={setEraserWidth}
-        paintMode={paintMode}
-        onPaintModeChange={setPaintMode}
+        paintColor={paintColor}
+        onPaintColorChange={setPaintColor}
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
         background={background}

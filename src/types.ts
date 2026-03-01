@@ -25,9 +25,13 @@ export type InteractionMode = 'desktop' | 'eni' | 'tablet';
 
 export type EraserMode = 'click' | 'stroke';
 
-export type PaintMode = 'stroke' | 'fill';
-
 export type EndpointStyle = 'none' | 'arrow' | 'circle' | 'square';
+
+export interface TextSegment {
+  start: number;
+  end: number;
+  fill: string;
+}
 
 export interface BaseShape {
   id: string;
@@ -87,6 +91,7 @@ export interface TextShape extends BaseShape {
   text: string;
   fontSize: number;
   width: number;
+  segments?: TextSegment[];
 }
 
 export interface ImageShape extends BaseShape {
@@ -159,6 +164,7 @@ export interface BoardMeta {
   favorite: boolean;
   shared: boolean;
   background: BackgroundType;
+  bgColor?: string;
 }
 
 export interface CanvasHandle {

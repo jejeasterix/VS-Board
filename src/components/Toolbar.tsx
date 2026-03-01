@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { PenTool, HighlighterTool, EraserTool, PaintBucketTool } from './ToolIllustrations';
 import ModeModal from './ModeModal';
-import type { ToolType, BackgroundType, InteractionMode, CanvasHandle, EraserMode, PaintMode } from '../types';
+import type { ToolType, BackgroundType, InteractionMode, CanvasHandle, EraserMode } from '../types';
 
 interface ToolbarProps {
   tool: ToolType;
@@ -26,8 +26,8 @@ interface ToolbarProps {
   onEraserModeChange: (mode: EraserMode) => void;
   eraserWidth: number;
   onEraserWidthChange: (width: number) => void;
-  paintMode: PaintMode;
-  onPaintModeChange: (mode: PaintMode) => void;
+  paintColor: string;
+  onPaintColorChange: (color: string) => void;
   fontSize: number;
   onFontSizeChange: (size: number) => void;
   background: BackgroundType;
@@ -161,7 +161,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   strokeOpacity: _, onStrokeOpacityChange,
   eraserMode, onEraserModeChange,
   eraserWidth, onEraserWidthChange,
-  paintMode, onPaintModeChange,
+  paintColor, onPaintColorChange,
   fontSize, onFontSizeChange,
   background, onBackgroundChange,
   interactionMode, onModeChange, canvasRef,
@@ -507,7 +507,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               }}
               title="Pot de peinture"
             >
-              <PaintBucketTool color={strokeColor} active={tool === 'paintBucket'} />
+              <PaintBucketTool color={paintColor} active={tool === 'paintBucket'} />
             </button>
           </div>
         </div>
@@ -634,29 +634,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       {/* ========= PAINT BUCKET PALETTE POPUP ========= */}
       {openPopup === 'paint-palette' && tool === 'paintBucket' && (
         <div className="fm-palette-popup" onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
-          {/* Mode toggle: Contour / Remplissage */}
-          <div className="fm-eraser-modes">
-            <button
-              className={`fm-eraser-mode-btn ${paintMode === 'stroke' ? 'active' : ''}`}
-              onClick={() => onPaintModeChange('stroke')}
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <rect x="3" y="3" width="14" height="14" rx="2" />
-              </svg>
-              <span>Contour</span>
-            </button>
-            <button
-              className={`fm-eraser-mode-btn ${paintMode === 'fill' ? 'active' : ''}`}
-              onClick={() => onPaintModeChange('fill')}
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" stroke="currentColor" strokeWidth="1">
-                <rect x="3" y="3" width="14" height="14" rx="2" />
-              </svg>
-              <span>Remplissage</span>
-            </button>
-          </div>
-
-          <div className="fm-palette-label">Couleur</div>
+          <div className="fm-palette-label">Couleur du pot</div>
           <div className="fm-palette-colors">
             {[
               '#000000', '#374151', '#6b7280', '#9ca3af',
@@ -667,16 +645,16 @@ const Toolbar: React.FC<ToolbarProps> = ({
             ].map(c => (
               <button
                 key={c}
-                className={`fm-palette-swatch ${strokeColor === c ? 'selected' : ''}`}
+                className={`fm-palette-swatch ${paintColor === c ? 'selected' : ''}`}
                 style={{ backgroundColor: c }}
-                onClick={() => onStrokeColorChange(c)}
+                onClick={() => onPaintColorChange(c)}
               />
             ))}
             <label className="fm-palette-swatch fm-palette-custom">
               <input
                 type="color"
-                value={strokeColor}
-                onChange={e => onStrokeColorChange(e.target.value)}
+                value={paintColor}
+                onChange={e => onPaintColorChange(e.target.value)}
               />
             </label>
           </div>
