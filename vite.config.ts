@@ -4,6 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    host: true,
+  },
   plugins: [
     react(),
     VitePWA({
@@ -44,7 +47,4 @@ export default defineConfig({
       }
     })
   ],
-  define: {
-    "process.env": {},
-  },
 })
