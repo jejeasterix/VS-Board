@@ -169,7 +169,7 @@ const modeIcons: Record<InteractionMode, React.ReactNode> = {
 };
 
 const DrawToolsIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round">
+  <svg width={size} height={size} viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     {/* Pot - back */}
     <path d="M85.773 193.33c1.588.277 3.281.42 5.08.42h44.206c15.145-2.344 20.15-10.115 20.15-25.26l3.255-72.038c1.823-25.302-4.093-25.098-21.842-25.358H77.364c-12.731 0-16.556 9.815-16.556 22.546l1.469 15.215" />
     {/* Pot - front */}
@@ -326,8 +326,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <div className="fm-minibar">
         {!isTactileInterface && (
           <button
-            className={`fm-mini-btn ${tool === 'select' ? 'active' : ''}`}
-            onClick={() => onToolChange('select')}
+            className={`fm-mini-btn ${tool === 'select' && openPopup !== 'shapes' ? 'active' : ''}`}
+            onClick={() => { onToolChange('select'); closeAll(); }}
             title="Sélection"
           >
             <MousePointer2 size={18} />
@@ -335,15 +335,15 @@ const Toolbar: React.FC<ToolbarProps> = ({
         )}
         {!isTactileInterface && (
           <button
-            className={`fm-mini-btn ${tool === 'hand' ? 'active' : ''}`}
-            onClick={() => onToolChange('hand')}
+            className={`fm-mini-btn ${tool === 'hand' && openPopup !== 'shapes' ? 'active' : ''}`}
+            onClick={() => { onToolChange('hand'); closeAll(); }}
             title="Main (déplacer)"
           >
             <Hand size={18} />
           </button>
         )}
         <button
-          className={`fm-mini-btn ${isDrawTool ? 'active' : ''}`}
+          className={`fm-mini-btn ${isDrawTool && openPopup !== 'shapes' ? 'active' : ''}`}
           onClick={() => {
             if (isTactile && isDrawTool) { onToolChange('select'); }
             else { onToolChange('freedraw'); }
@@ -354,17 +354,20 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <DrawToolsIcon size={20} />
         </button>
         <button
-          className={`fm-mini-btn ${isShapeTool ? 'active' : ''}`}
+          className={`fm-mini-btn ${openPopup === 'shapes' || isShapeTool ? 'active' : ''}`}
           onClick={() => {
-            if (isTactile && isShapeTool) { onToolChange('select'); closeAll(); }
-            else { toggle('shapes'); }
+            if (isTactile && isShapeTool && openPopup !== 'shapes') { onToolChange('select'); closeAll(); }
+            else {
+              if (openPopup !== 'shapes') onToolChange('select');
+              toggle('shapes');
+            }
           }}
           title="Formes"
         >
           <Square size={18} />
         </button>
         <button
-          className={`fm-mini-btn ${tool === 'text' ? 'active' : ''}`}
+          className={`fm-mini-btn ${tool === 'text' && openPopup !== 'shapes' ? 'active' : ''}`}
           onClick={() => {
             if (isTactile && tool === 'text') { onToolChange('select'); }
             else { onToolChange('text'); }
@@ -419,8 +422,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       )}
 
       {/* Shapes tabbed panel (from minibar) */}
-      {openPopup === 'shapes' && (
-        <div className="fm-shapes-panel" onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
+        <div className={`fm-shapes-panel ${openPopup === 'shapes' ? '' : 'fm-shapes-panel-hidden'}`} onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
           <div className="fm-shapes-tabs">
             {SHAPE_TABS.map(tab => (
               <button
@@ -539,7 +541,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </>
           )}
         </div>
-      )}
 
       {/* ========= BOTTOM DRAWING TOOLBAR (Freeform-style) ========= */}
         <div className={`fm-toolbar ${showDrawToolbar ? '' : 'fm-toolbar-hidden'}`}>
