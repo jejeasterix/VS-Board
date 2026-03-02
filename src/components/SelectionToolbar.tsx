@@ -10,6 +10,7 @@ interface SelectionToolbarProps {
   onDelete: () => void;
   onDuplicate: () => void;
   onCrop?: () => void;
+  onRemoveBackground?: () => void;
 }
 
 const QUICK_COLORS = ['#1d1d1f', '#ff3b30', '#ff9500', '#34c759', '#007aff', '#af52de'];
@@ -88,7 +89,7 @@ function getShapeBounds(s: Shape): { minX: number; minY: number; maxX: number; m
 
 const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
   selectedShapes, stagePos, stageScale, topBarHeight,
-  onUpdate, onDelete, onDuplicate, onCrop,
+  onUpdate, onDelete, onDuplicate, onCrop, onRemoveBackground,
 }) => {
   const [openPopup, setOpenPopup] = useState<'stroke' | 'fill' | null>(null);
 
@@ -382,6 +383,18 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 1v11h11" />
               <path d="M1 4h11v11" />
+            </svg>
+          </button>
+        )}
+
+        {/* Remove background (image only, single selection) */}
+        {primaryCategory === 'image' && !isMixed && selectedShapes.length === 1 && onRemoveBackground && (
+          <button className="sel-btn" onClick={onRemoveBackground} title="Supprimer le fond">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1.5" y="1.5" width="13" height="13" rx="2" strokeDasharray="2 2" />
+              <path d="M5 11L11 5" />
+              <path d="M4 8l2 2" />
+              <path d="M8 4l3 3" />
             </svg>
           </button>
         )}

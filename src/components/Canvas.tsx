@@ -703,6 +703,45 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     setCropEditing(null);
   }, []);
 
+  // ---- Remove white background ----
+  const handleRemoveBackground = useCallback(() => {
+    if (selectedIds.length !== 1) return;
+    const shape = shapesRef.current.find(s => s.id === selectedIds[0]);
+    if (!shape || shape.type !== 'image') return;
+    const imgShape = shape as ImageShape;
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = imgShape.src;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imageData.data;
+      const threshold = 240;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i] > threshold && d[i + 1] > threshold && d[i + 2] > threshold) {
+          d[i + 3] = 0;
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+      const newSrc = canvas.toDataURL('image/png');
+      const newShapes = shapesRef.current.map(s =>
+        s.id === imgShape.id ? { ...s, src: newSrc } as Shape : s
+      );
+      dispatch({ type: 'PUSH', shapes: newShapes });
+      // Update loadedImages with the new src
+      const newImg = new window.Image();
+      newImg.src = newSrc;
+      newImg.onload = () => {
+        setLoadedImages(prev => ({ ...prev, [newSrc]: newImg }));
+      };
+    };
+  }, [selectedIds]);
+
   // ---- Keyboard shortcuts ----
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -2007,6 +2046,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
           onDelete={handleDeleteSelected}
           onDuplicate={handleDuplicateSelected}
           onCrop={handleCropStart}
+          onRemoveBackground={handleRemoveBackground}
         />
       )}
 
