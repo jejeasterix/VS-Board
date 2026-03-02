@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, f
 import { Stage, Layer, Rect, Ellipse, Line, Arrow, Text, Transformer, Image as KonvaImage, Star, Path, Circle, Arc, Group } from 'react-konva';
 import Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
-import type { Shape, ToolType, BackgroundType, CanvasHandle, InteractionMode, BaseShape, EraserMode, TextSegment, TextShape as TextShapeType, EllipseShape, StarShape, Shape3dShape, IconShape } from '../types';
+import type { Shape, ToolType, BackgroundType, CanvasHandle, InteractionMode, BaseShape, EraserMode, TextSegment, TextShape as TextShapeType, EllipseShape, StarShape, Shape3dShape, IconShape, ImageShape } from '../types';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getTrianglePoints, getSpeechBubblePath, getCurvePath } from '../shapeData';
 import { get3dPaths } from '../shape3dPaths';
@@ -370,6 +370,11 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
   const [textEditing, setTextEditing] = useState<{
     id?: string; x: number; y: number; screenX: number; screenY: number; existingText?: string;
   } | null>(null);
+  const [cropEditing, setCropEditing] = useState<{
+    shapeId: string; imgSrc: string;
+    origWidth: number; origHeight: number;
+    cropX: number; cropY: number; cropWidth: number; cropHeight: number;
+  } | null>(null);
   const [loadedImages, setLoadedImages] = useState<Record<string, HTMLImageElement>>({});
 
   const stageRef = useRef<Konva.Stage>(null);
@@ -510,6 +515,48 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     e.target.value = '';
   }, [dimensions, generateId, onToolChange]);
 
+  // ---- Drag & drop image ----
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = reader.result as string;
+      const img = new window.Image();
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+        const maxSize = 500;
+        if (w > maxSize || h > maxSize) {
+          const ratio = Math.min(maxSize / w, maxSize / h);
+          w *= ratio;
+          h *= ratio;
+        }
+        const stage = stageRef.current;
+        const scale = stage?.scaleX() ?? 1;
+        const pos = { x: stage?.x() ?? 0, y: stage?.y() ?? 0 };
+        const cx = (e.nativeEvent.offsetX - pos.x) / scale - w / 2;
+        const cy = (e.nativeEvent.offsetY - pos.y) / scale - h / 2;
+
+        const newShape: Shape = {
+          id: generateId(), type: 'image', x: cx, y: cy,
+          stroke: 'transparent', strokeWidth: 0, fill: 'transparent',
+          rotation: 0, scaleX: 1, scaleY: 1, src, width: w, height: h,
+        };
+        setLoadedImages(prev => ({ ...prev, [src]: img }));
+        dispatch({ type: 'PUSH', shapes: [...shapesRef.current, newShape] });
+        onToolChange('select');
+      };
+      img.src = src;
+    };
+    reader.readAsDataURL(file);
+  }, [generateId, onToolChange]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
   // ---- Snapshot for thumbnail ----
   const getSnapshot = useCallback(() => {
     const stage = stageRef.current;
@@ -604,6 +651,58 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     setSelectedIds(newShapes.map(s => s.id));
   }, [selectedIds, generateId]);
 
+  // ---- Crop start ----
+  const handleCropStart = useCallback(() => {
+    if (selectedIds.length !== 1) return;
+    const shape = shapesRef.current.find(s => s.id === selectedIds[0]);
+    if (!shape || shape.type !== 'image') return;
+    const imgShape = shape as ImageShape;
+    const img = loadedImages[imgShape.src];
+    if (!img) return;
+    const origW = img.naturalWidth || img.width;
+    const origH = img.naturalHeight || img.height;
+    setCropEditing({
+      shapeId: imgShape.id,
+      imgSrc: imgShape.src,
+      origWidth: origW,
+      origHeight: origH,
+      cropX: imgShape.cropX ?? 0,
+      cropY: imgShape.cropY ?? 0,
+      cropWidth: imgShape.cropWidth ?? origW,
+      cropHeight: imgShape.cropHeight ?? origH,
+    });
+  }, [selectedIds, loadedImages]);
+
+  const handleCropConfirm = useCallback(() => {
+    if (!cropEditing) return;
+    const shape = shapesRef.current.find(s => s.id === cropEditing.shapeId) as ImageShape | undefined;
+    if (!shape) { setCropEditing(null); return; }
+    // Compute new display size proportional to the crop ratio
+    const img = loadedImages[shape.src];
+    if (!img) { setCropEditing(null); return; }
+    const origW = img.naturalWidth || img.width;
+    const origH = img.naturalHeight || img.height;
+    // The current display size covers the full original (or previous crop)
+    // New display size = current display size * (new crop / old crop)
+    const prevCropW = shape.cropWidth ?? origW;
+    const prevCropH = shape.cropHeight ?? origH;
+    const newDisplayW = shape.width * (cropEditing.cropWidth / prevCropW);
+    const newDisplayH = shape.height * (cropEditing.cropHeight / prevCropH);
+    const newShapes = shapesRef.current.map(s =>
+      s.id === cropEditing.shapeId
+        ? { ...s, width: newDisplayW, height: newDisplayH,
+            cropX: cropEditing.cropX, cropY: cropEditing.cropY,
+            cropWidth: cropEditing.cropWidth, cropHeight: cropEditing.cropHeight } as Shape
+        : s
+    );
+    dispatch({ type: 'PUSH', shapes: newShapes });
+    setCropEditing(null);
+  }, [cropEditing, loadedImages]);
+
+  const handleCropCancel = useCallback(() => {
+    setCropEditing(null);
+  }, []);
+
   // ---- Keyboard shortcuts ----
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -628,11 +727,14 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
           handleDeleteSelected();
         }
       }
-      if (e.key === 'Escape') setSelectedIds([]);
+      if (e.key === 'Escape') {
+        if (cropEditing) { setCropEditing(null); return; }
+        setSelectedIds([]);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedIds, handleDeleteSelected]);
+  }, [selectedIds, handleDeleteSelected, cropEditing]);
 
   // ---- Canvas coordinate from pointer ----
   const getCanvasPoint = useCallback(() => {
@@ -1444,7 +1546,12 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
       case 'image': {
         const img = loadedImages[shape.src];
         if (!img) return null;
-        return <KonvaImage key={k} {...common} image={img} width={shape.width} height={shape.height} />;
+        const hasCrop = shape.cropWidth != null && shape.cropHeight != null;
+        return <KonvaImage key={k} {...common} image={img} width={shape.width} height={shape.height}
+          {...(hasCrop ? {
+            crop: { x: shape.cropX ?? 0, y: shape.cropY ?? 0, width: shape.cropWidth!, height: shape.cropHeight! },
+          } : {})}
+        />;
       }
       case 'roundedRect':
         return <Rect key={k} {...common} width={shape.width} height={shape.height} cornerRadius={shape.cornerRadius} />;
@@ -1830,7 +1937,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     tool === 'select' ? 'default' : 'crosshair';
 
   return (
-    <div className="canvas-container" style={{ cursor: cursorStyle }}>
+    <div className="canvas-container" style={{ cursor: cursorStyle }} onDrop={handleDrop} onDragOver={handleDragOver}>
       <Stage
         ref={stageRef}
         width={dimensions.width}
@@ -1890,7 +1997,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
       </Stage>
 
       {/* Selection toolbar */}
-      {selectedIds.length > 0 && !textEditing && (
+      {selectedIds.length > 0 && !textEditing && !cropEditing && (
         <SelectionToolbar
           selectedShapes={shapes.filter(s => selectedIds.includes(s.id))}
           stagePos={stagePos}
@@ -1899,6 +2006,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
           onUpdate={handleUpdateSelected}
           onDelete={handleDeleteSelected}
           onDuplicate={handleDuplicateSelected}
+          onCrop={handleCropStart}
         />
       )}
 
@@ -1927,6 +2035,187 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
           }}
         />
       )}
+
+      {/* Crop overlay */}
+      {cropEditing && (() => {
+        const shape = shapes.find(s => s.id === cropEditing.shapeId) as ImageShape | undefined;
+        if (!shape) return null;
+        const img = loadedImages[shape.src];
+        if (!img) return null;
+        const origW = img.naturalWidth || img.width;
+        const origH = img.naturalHeight || img.height;
+        // Compute image screen position
+        const imgScreenX = shape.x * stageScale + stagePos.x;
+        const imgScreenY = shape.y * stageScale + stagePos.y;
+        const imgScreenW = shape.width * (shape.scaleX ?? 1) * stageScale;
+        const imgScreenH = shape.height * (shape.scaleY ?? 1) * stageScale;
+        // Scale factor from original pixels to screen pixels
+        const prevCropW = shape.cropWidth ?? origW;
+        const prevCropH = shape.cropHeight ?? origH;
+        const pxToScreenX = imgScreenW / prevCropW;
+        const pxToScreenY = imgScreenH / prevCropH;
+        // Full image screen dimensions
+        const fullScreenW = origW * pxToScreenX;
+        const fullScreenH = origH * pxToScreenY;
+        // Full image screen position (offset for existing crop)
+        const fullScreenX = imgScreenX - (shape.cropX ?? 0) * pxToScreenX;
+        const fullScreenY = imgScreenY - (shape.cropY ?? 0) * pxToScreenY;
+        // Crop region in screen coordinates
+        const cropScreenX = fullScreenX + cropEditing.cropX * pxToScreenX;
+        const cropScreenY = fullScreenY + cropEditing.cropY * pxToScreenY;
+        const cropScreenW = cropEditing.cropWidth * pxToScreenX;
+        const cropScreenH = cropEditing.cropHeight * pxToScreenY;
+
+        const handlePositions = [
+          { key: 'tl', cx: 'left', cy: 'top', cursor: 'nwse-resize' },
+          { key: 'tc', cx: 'center', cy: 'top', cursor: 'ns-resize' },
+          { key: 'tr', cx: 'right', cy: 'top', cursor: 'nesw-resize' },
+          { key: 'ml', cx: 'left', cy: 'center', cursor: 'ew-resize' },
+          { key: 'mr', cx: 'right', cy: 'center', cursor: 'ew-resize' },
+          { key: 'bl', cx: 'left', cy: 'bottom', cursor: 'nesw-resize' },
+          { key: 'bc', cx: 'center', cy: 'bottom', cursor: 'ns-resize' },
+          { key: 'br', cx: 'right', cy: 'bottom', cursor: 'nwse-resize' },
+        ];
+
+        const getHandlePos = (cx: string, cy: string) => ({
+          left: cx === 'left' ? cropScreenX - 5 : cx === 'center' ? cropScreenX + cropScreenW / 2 - 5 : cropScreenX + cropScreenW - 5,
+          top: cy === 'top' ? cropScreenY - 5 : cy === 'center' ? cropScreenY + cropScreenH / 2 - 5 : cropScreenY + cropScreenH - 5,
+        });
+
+        const onHandleMouseDown = (handleKey: string) => (e: React.MouseEvent) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const startCrop = { ...cropEditing };
+          const minSizePx = 20; // min crop region in original pixels
+
+          const onMove = (ev: MouseEvent) => {
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+            // Convert screen delta to original pixels
+            const dpx = dx / pxToScreenX;
+            const dpy = dy / pxToScreenY;
+
+            let newCX = startCrop.cropX;
+            let newCY = startCrop.cropY;
+            let newCW = startCrop.cropWidth;
+            let newCH = startCrop.cropHeight;
+
+            if (handleKey.includes('l')) {
+              const move = Math.min(dpx, newCW - minSizePx);
+              newCX = Math.max(0, startCrop.cropX + move);
+              newCW = startCrop.cropWidth - (newCX - startCrop.cropX);
+            }
+            if (handleKey.includes('r')) {
+              newCW = Math.max(minSizePx, startCrop.cropWidth + dpx);
+              if (newCX + newCW > origW) newCW = origW - newCX;
+            }
+            if (handleKey.startsWith('t')) {
+              const move = Math.min(dpy, newCH - minSizePx);
+              newCY = Math.max(0, startCrop.cropY + move);
+              newCH = startCrop.cropHeight - (newCY - startCrop.cropY);
+            }
+            if (handleKey.startsWith('b')) {
+              newCH = Math.max(minSizePx, startCrop.cropHeight + dpy);
+              if (newCY + newCH > origH) newCH = origH - newCY;
+            }
+            // Middle handles
+            if (handleKey === 'mc' || handleKey === 'tc' || handleKey === 'bc') {
+              // horizontal stays same
+            }
+            if (handleKey === 'ml' || handleKey === 'mr') {
+              // vertical stays same
+            }
+
+            setCropEditing(prev => prev ? { ...prev, cropX: newCX, cropY: newCY, cropWidth: newCW, cropHeight: newCH } : null);
+          };
+          const onUp = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+          };
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+        };
+
+        // Drag the whole crop region
+        const onRegionMouseDown = (e: React.MouseEvent) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const startCrop = { ...cropEditing };
+
+          const onMove = (ev: MouseEvent) => {
+            const dpx = (ev.clientX - startX) / pxToScreenX;
+            const dpy = (ev.clientY - startY) / pxToScreenY;
+            let newCX = Math.max(0, Math.min(origW - startCrop.cropWidth, startCrop.cropX + dpx));
+            let newCY = Math.max(0, Math.min(origH - startCrop.cropHeight, startCrop.cropY + dpy));
+            setCropEditing(prev => prev ? { ...prev, cropX: newCX, cropY: newCY } : null);
+          };
+          const onUp = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+          };
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+        };
+
+        return (
+          <div className="crop-overlay" onMouseDown={handleCropCancel}>
+            {/* Full image dimmed */}
+            <img
+              src={cropEditing.imgSrc}
+              className="crop-full-image"
+              style={{
+                left: fullScreenX, top: fullScreenY,
+                width: fullScreenW, height: fullScreenH,
+              }}
+              draggable={false}
+            />
+            {/* Dark mask with cutout */}
+            <svg className="crop-mask" style={{ left: fullScreenX, top: fullScreenY, width: fullScreenW, height: fullScreenH }}>
+              <defs>
+                <mask id="crop-cutout">
+                  <rect width="100%" height="100%" fill="white" />
+                  <rect x={cropScreenX - fullScreenX} y={cropScreenY - fullScreenY}
+                    width={cropScreenW} height={cropScreenH} fill="black" />
+                </mask>
+              </defs>
+              <rect width="100%" height="100%" fill="rgba(0,0,0,0.5)" mask="url(#crop-cutout)" />
+            </svg>
+            {/* Crop region border */}
+            <div
+              className="crop-region"
+              style={{ left: cropScreenX, top: cropScreenY, width: cropScreenW, height: cropScreenH }}
+              onMouseDown={onRegionMouseDown}
+            >
+              {/* Grid lines (rule of thirds) */}
+              <div className="crop-grid-h" style={{ top: '33.33%' }} />
+              <div className="crop-grid-h" style={{ top: '66.66%' }} />
+              <div className="crop-grid-v" style={{ left: '33.33%' }} />
+              <div className="crop-grid-v" style={{ left: '66.66%' }} />
+            </div>
+            {/* Handles */}
+            {handlePositions.map(h => {
+              const pos = getHandlePos(h.cx, h.cy);
+              return (
+                <div key={h.key} className="crop-handle"
+                  style={{ left: pos.left, top: pos.top, cursor: h.cursor }}
+                  onMouseDown={onHandleMouseDown(h.key)} />
+              );
+            })}
+            {/* Action buttons */}
+            <div className="crop-actions"
+              style={{ left: cropScreenX + cropScreenW / 2, top: cropScreenY + cropScreenH + 16 }}
+              onMouseDown={e => e.stopPropagation()}
+            >
+              <button className="crop-btn crop-btn-cancel" onClick={handleCropCancel}>Annuler</button>
+              <button className="crop-btn crop-btn-confirm" onClick={handleCropConfirm}>Valider</button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Hidden file input for images */}
       <input

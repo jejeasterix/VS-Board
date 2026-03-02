@@ -99,6 +99,10 @@ export interface ImageShape extends BaseShape {
   src: string;
   width: number;
   height: number;
+  cropX?: number;
+  cropY?: number;
+  cropWidth?: number;
+  cropHeight?: number;
 }
 
 export interface RoundedRectShape extends BaseShape {

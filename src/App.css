@@ -1440,6 +1440,95 @@
   box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
 }
 
+/* ---- Crop overlay ---- */
+.crop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  cursor: crosshair;
+}
+
+.crop-full-image {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
+.crop-mask {
+  position: absolute;
+  pointer-events: none;
+}
+
+.crop-region {
+  position: absolute;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+  cursor: move;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.crop-grid-h, .crop-grid-v {
+  position: absolute;
+  pointer-events: none;
+}
+
+.crop-grid-h {
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.crop-grid-v {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.crop-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 2px;
+  z-index: 201;
+}
+
+.crop-actions {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 202;
+}
+
+.crop-btn {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.crop-btn-cancel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  color: #3c3c43;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+.crop-btn-cancel:hover { background: rgba(255, 255, 255, 1); }
+
+.crop-btn-confirm {
+  background: #007aff;
+  color: #fff;
+}
+.crop-btn-confirm:hover { background: #0066d6; }
+
 /* ---- Responsive ---- */
 @media (max-width: 600px) {
   .topbar-brand { display: none; }
